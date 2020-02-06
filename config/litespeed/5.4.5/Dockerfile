@@ -23,6 +23,7 @@ RUN apt-get install -y software-properties-common && \
 
 RUN rm -rf /usr/local/lsws/conf
 ADD conf /usr/local/lsws/conf
+ADD admin/conf /usr/local/lsws/admin/conf
 RUN chown 999:999 /usr/local/lsws/conf -R
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
