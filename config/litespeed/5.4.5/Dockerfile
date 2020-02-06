@@ -3,7 +3,8 @@ FROM ubuntu:18.04
 
 RUN apt-get update && apt-get install wget curl tzdata -y
 
-RUN /lsws-install.sh
+COPY lsws-install.sh /
+RUN chmod +x /lsws-install.sh && bash /lsws-install.sh
 
 RUN apt-get install mysql-client lsphp73 lsphp73-common lsphp73-mysql lsphp73-opcache \
     lsphp73-curl lsphp73-json lsphp73-imagick lsphp73-redis lsphp73-memcached -y

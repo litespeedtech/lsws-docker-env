@@ -18,7 +18,7 @@ services:
       args:
         #extensions: lsphp74 lsphp74-common lsphp74-mysql lsphp74-json                                                                                    
         extensions: vim
-    image: litespeedtech/openlitespeed-beta:${LITESPEED}
+    image: litespeedtech/litespeed-beta:${LITESPEED}
     env_file:
       - .env
     volumes:

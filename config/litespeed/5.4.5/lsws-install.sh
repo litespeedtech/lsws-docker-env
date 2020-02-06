@@ -4,11 +4,21 @@ GROUP='nogroup'
 ADMIN_PASS='litespeed'
 LSDIR='/usr/local/lsws'
 
+add_trial(){
+    wget -q --no-check-certificate http://license.litespeedtech.com/reseller/trial.key
+}
+
+del_trial(){
+    rm -f ${LSDIR}/conf/trial.key* 
+}
+
 lsws_download(){
     wget -q --no-check-certificate https://www.litespeedtech.com/packages/5.0/lsws-5.4.5-ent-x86_64-linux.tar.gz
     tar xzf lsws-*-ent-x86_64-linux.tar.gz && rm -f lsws-*.tar.gz
-    cd lsws-* && wget -q --no-check-certificate http://license.litespeedtech.com/reseller/trial.key
+    cd lsws-5.4.5
+    add_trial
 }
+
 
 update_install(){
     sed -i '/^license$/d' install.sh
@@ -32,6 +42,10 @@ update_function(){
     " functions.sh
 }
 
+rpm_install(){
+    wget -O - http://rpms.litespeedtech.com/debian/enable_lst_debian_repo.sh | bash
+}
+
 check_version(){
     SERVERV=$(cat /usr/local/lsws/VERSION)
     echo "Version: ${SERVERV}"
@@ -51,7 +65,9 @@ main(){
     update_function
     run_install
     lsws_restart
+    rpm_install
     check_version
+    del_trial
 }
 
 main
