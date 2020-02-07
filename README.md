@@ -1,6 +1,6 @@
 # LiteSpeed WordPress Docker Container (Beta)
 [![Build Status](https://travis-ci.com/litespeedtech/lsws-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/litespeed)
-[![OpenLiteSpeed](https://img.shields.io/badge/litespeed-5.4.5-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/litespeed)
+[![LiteSpeed](https://img.shields.io/badge/litespeed-5.4.5-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/litespeed)
 [![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/litespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/litespeed)
 [![beta pulls](https://img.shields.io/docker/pulls/litespeedtech/litespeed-beta?label=beta%20pulls)](https://hub.docker.com/r/litespeedtech/litespeed-beta)
 
@@ -121,9 +121,9 @@ bash bin/webadmin.sh -lsup
 After installation, you can use phpMinAdmin to access the database by visiting http://127.0.0.1:8080 or https://127.0.0.1:8443. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
 ## Support & Feedback
-If you still have a question after using OpenLiteSpeed Docker, you have a few options.
+If you still have a question after using LiteSpeed Docker, you have a few options.
 * Join [the GoLiteSpeed Slack community](litespeedtech.com/slack) for real-time discussion
-* Post to [the OpenLiteSpeed Forums](https://forum.openlitespeed.org/) for community support
-* Reporting any issue on [Github ols-docker-env](https://github.com/litespeedtech/ols-docker-env/issues) project
+* Post to [the LiteSpeed Forums](https://www.litespeedtech.com/support/forum/) for community support
+* Reporting any issue on [Github lsws-docker-env](https://github.com/litespeedtech/lsws-docker-env/issues) project
 
 **Pull requests are always welcome**
