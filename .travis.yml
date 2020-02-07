@@ -36,10 +36,9 @@ before_install:
  script:  
    - ./.travis/verify.sh
 
-# after_success:
-#   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-#   - docker push litespeedtech/openlitespeed-beta:1.6.5.lh
-#   - docker push litespeedtech/openlitespeed-beta:1.6.4.lh
+ after_success:
+   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+   - docker push litespeedtech/litespeed-beta:5.4.5
 
  after_script:
    - docker-compose stop

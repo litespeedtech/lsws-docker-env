@@ -1,11 +1,25 @@
 #!/usr/bin/env bash
 CK_RESULT=''
-HTTPD_CONF='httpd_config.conf'
+LSDIR='/usr/local/lsws'
+HTTPD_CONF='' 
 
 help_message(){
     echo 'Command [-add|-del] [domain_name]'
     echo 'Example 1: domain-ctl.sh -add example.com'
     echo 'Example 2: domain-ctl.sh -del example.com'
+}
+
+check_lsv(){
+    if [ -f ${LSDIR}/litespeed ]; then
+        LSV='lsws'
+        HTTPD_CONF='httpd_config.xml' 
+    elif [ -f ${LSDIR}/openlitespeed ]; then
+        LSV='openlitespeed'
+        HTTPD_CONF='httpd_config.conf'
+    else
+        echo 'Version not exist, abort!'
+        exit 1     
+    fi
 }
 
 dot_escape(){
@@ -48,32 +62,50 @@ www_domain(){
 }
 
 add_domain(){
+    check_lsv
     dot_escape ${1}
     DOMAIN=${ESCAPE}
     www_domain ${1}
-    check_duplicate "member.*${DOMAIN}" ${HTTPD_CONF}
+    if [ "${LSV}" = 'lsws' ]; then
+        check_duplicate "vhDomain.*${DOMAIN}" ${HTTPD_CONF}
+    elif [ "${LSV}" = 'openlitespeed' ]; then
+        check_duplicate "member.*${DOMAIN}" ${HTTPD_CONF}
+    fi
     if [ "${CK_RESULT}" != '' ]; then
         echo "# It appears the domain already exist! Check the ${HTTPD_CONF} if you believe this is a mistake!"
         exit 1
     else
-        perl -0777 -p -i -e 's/(vhTemplate centralConfigLog \{[^}]+)\}*(^.*listeners.*$)/\1$2
+        if [ "${LSV}" = 'lsws' ]; then
+            echo 'Not support yet'
+        elif [ "${LSV}" = 'openlitespeed' ]; then    
+            perl -0777 -p -i -e 's/(vhTemplate centralConfigLog \{[^}]+)\}*(^.*listeners.*$)/\1$2
   member '${1}' {
     vhDomain              '${1},${WWW_DOMAIN}'
-  }/gmi' ${HTTPD_CONF}     
+  }/gmi' ${HTTPD_CONF}
+        fi
     fi
 }
 
 del_domain(){
+    check_lsv
     dot_escape ${1}
     DOMAIN=${ESCAPE}
-    check_duplicate "member.*${DOMAIN}" ${HTTPD_CONF}
+    if [ "${LSV}" = 'lsws' ]; then
+        check_duplicate "vhDomain.*${DOMAIN}" ${HTTPD_CONF}
+    elif [ "${LSV}" = 'openlitespeed' ]; then
+        check_duplicate "member.*${DOMAIN}" ${HTTPD_CONF}
+    fi
     if [ "${CK_RESULT}" = '' ]; then
         echo "# We couldn't find the domain you wanted to remove! Check the ${HTTPD_CONF} if you believe this is a mistake!"
         exit 1
     else
-        fst_match_line ${1} ${HTTPD_CONF}
-        lst_match_line ${FIRST_LINE_NUM} ${HTTPD_CONF}
-        sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${HTTPD_CONF}
+        if [ "${LSV}" = 'lsws' ]; then
+            echo 'Not support yet'
+        elif [ "${LSV}" = 'openlitespeed' ]; then     
+            fst_match_line ${1} ${HTTPD_CONF}
+            lst_match_line ${FIRST_LINE_NUM} ${HTTPD_CONF}
+            sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${HTTPD_CONF}
+        fi    
     fi
 }
 

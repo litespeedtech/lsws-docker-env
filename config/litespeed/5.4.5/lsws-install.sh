@@ -5,7 +5,7 @@ ADMIN_PASS='litespeed'
 LSDIR='/usr/local/lsws'
 
 basic_install(){
-    apt-get install net-tools apt-util -y
+    apt-get update && apt-get install net-tools apt-util openssl -y
 }
 
 add_trial(){
@@ -46,6 +46,22 @@ update_function(){
     " functions.sh
 }
 
+gen_selfsigned_cert(){ 
+    KEYNAME="${LSDIR}/admin/conf/webadmin.key"
+    CERTNAME="${LSDIR}/admin/conf/webadmin.crt"
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEYNAME} -out ${CERTNAME} <<csrconf
+US
+NJ
+Virtual
+docker
+Testing
+webadmin
+.
+.
+.
+csrconf
+}
+
 rpm_install(){
     echo 'Install LiteSpeed repo ...'
     wget -O - http://rpms.litespeedtech.com/debian/enable_lst_debian_repo.sh | bash >/dev/null 2>&1
@@ -73,6 +89,7 @@ main(){
     update_function
     run_install
     lsws_restart
+    gen_selfsigned_cert
     rpm_install
     check_version
     del_trial
