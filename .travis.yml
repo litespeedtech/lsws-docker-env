@@ -24,25 +24,25 @@ env:
 before_install:
   - ./.travis/main.sh
 
- install:
-   - git clone https://github.com/litespeedtech/lsws-docker-env.git
-   - docker build --tag litespeedtech/litespeed-beta:5.4.5 config/litespeed/5.4.5
-   - docker-compose up -d
+install:
+  - git clone https://github.com/litespeedtech/lsws-docker-env.git
+  - docker build --tag litespeedtech/litespeed-beta:5.4.5 config/litespeed/5.4.5
+  - docker-compose up -d
 
- before_script:
-   - docker image ls
-   - sleep 10
+before_script:
+  - docker image ls
+  - sleep 10
 
- script:  
-   - ./.travis/verify.sh
+script:  
+  - ./.travis/verify.sh
 
- after_success:
-   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-   - docker push litespeedtech/litespeed-beta:5.4.5
+after_success:
+  - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  - docker push litespeedtech/litespeed-beta:5.4.5
 
- after_script:
-   - docker-compose stop
-   - docker-compose rm -f
+after_script:
+  - docker-compose stop
+  - docker-compose rm -f
 
 
 
