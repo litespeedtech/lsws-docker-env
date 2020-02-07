@@ -23,7 +23,7 @@ services:
       - .env
     volumes:
         - ./lsws/conf:/usr/local/lsws/conf
-        - ./lsws/admin-conf:/usr/local/lsws/admin/conf
+        - ./lsws/admin/conf:/usr/local/lsws/admin/conf
         - ./bin/container:/usr/local/bin
         - ./sites:/var/www/vhosts/
         - ./certs:/etc/letsencrypt/

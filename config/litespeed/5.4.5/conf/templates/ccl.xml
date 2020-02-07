@@ -93,3 +93,4 @@
   RewriteRule ^/nospider/         -   [F]</rules>
     </rewrite>
   </virtualHostConfig>
+</virtualHostTemplate>

@@ -4,6 +4,10 @@ GROUP='nogroup'
 ADMIN_PASS='litespeed'
 LSDIR='/usr/local/lsws'
 
+basic_install(){
+    apt-get install net-tools apt-util -y
+}
+
 add_trial(){
     wget -q --no-check-certificate http://license.litespeedtech.com/reseller/trial.key
 }
@@ -43,7 +47,8 @@ update_function(){
 }
 
 rpm_install(){
-    wget -O - http://rpms.litespeedtech.com/debian/enable_lst_debian_repo.sh | bash
+    echo 'Install LiteSpeed repo ...'
+    wget -O - http://rpms.litespeedtech.com/debian/enable_lst_debian_repo.sh | bash >/dev/null 2>&1
 }
 
 check_version(){
@@ -52,7 +57,9 @@ check_version(){
 }
 
 run_install(){
-    /bin/bash install.sh
+    echo 'Main LSWS install ...'
+    /bin/bash install.sh >/dev/null 2>&1
+    echo 'Main LSWS install finished !'
 }
 
 lsws_restart(){
@@ -60,6 +67,7 @@ lsws_restart(){
 }    
 
 main(){
+    basic_install
     lsws_download
     update_install
     update_function
