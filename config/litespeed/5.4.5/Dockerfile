@@ -16,10 +16,8 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 	ln -s /usr/local/lsws/lsphp73/bin/php7.3 /usr/bin/php
 
 RUN apt-get install -y software-properties-common && \
-    add-apt-repository universe && \
-    add-apt-repository ppa:certbot/certbot && \
-    apt-get update && \
-    apt-get install -y certbot
+    add-apt-repository universe && add-apt-repository ppa:certbot/certbot && \
+    apt-get update && apt-get install -y certbot
 
 RUN rm -rf /usr/local/lsws/conf
 ADD conf /usr/local/lsws/conf

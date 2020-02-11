@@ -5,7 +5,7 @@
   <allowSymbolLink>1</allowSymbolLink>
   <enableScript>1</enableScript>
   <restrained>1</restrained>
-  <setUIDMode>0</setUIDMode>
+  <setUIDMode>2</setUIDMode>
   <chrootMode>0</chrootMode>
   <virtualHostConfig>
     <docRoot>$VH_ROOT/html/</docRoot>
@@ -56,11 +56,6 @@
       </cachePolicy>
     </cache>
     <contextList>
-      <context>
-        <type>cgi</type>
-        <uri>/cgi-bin/</uri>
-        <location>$VH_ROOT/cgi-bin/</location>
-      </context>
     </contextList>
     <rewrite>
       <enable>1</enable>
