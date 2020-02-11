@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 CK_RESULT=''
 LSDIR='/usr/local/lsws'
-HTTPD_CONF='' 
+LS_HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
+OLS_HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
 
 help_message(){
     echo 'Command [-add|-del] [domain_name]'
@@ -12,10 +13,8 @@ help_message(){
 check_lsv(){
     if [ -f ${LSDIR}/bin/litespeed ]; then
         LSV='lsws'
-        HTTPD_CONF="${LSDIR}/conf/httpd_config.xml"
     elif [ -f ${LSDIR}/bin/openlitespeed ]; then
         LSV='openlitespeed'
-        HTTPD_CONF="${LSDIR}/conf/httpd_config.conf"
     else
         echo 'Version not exist, abort!'
         exit 1     
@@ -61,31 +60,52 @@ www_domain(){
     WWW_DOMAIN=$(echo www.${1})
 }
 
+add_ls_domain(){
+    fst_match_line 'ccl.xml</templateFile>' ${LS_HTTPD_CONF}
+    NEWNUM=$((FIRST_LINE_NUM+1))
+    sed -i "${NEWNUM}i \ \ \ \ \ \ <member>\n \ \ \ \ \ \ \ <vhName>${DOMAIN}</vhName>\n \ \ \ \ \ \ \ <vhDomain>${DOMAIN},${WWW_DOMAIN}</vhDomain>\n \ \ \ \ \ \ </member>" ${LS_HTTPD_CONF}
+}
+
+add_ols_domain(){
+    perl -0777 -p -i -e 's/(vhTemplate centralConfigLog \{[^}]+)\}*(^.*listeners.*$)/\1$2
+  member '${DOMAIN}' {
+    vhDomain              '${DOMAIN},${WWW_DOMAIN}'
+  }/gmi' ${OLS_HTTPD_CONF}
+}
+
 add_domain(){
     check_lsv
     dot_escape ${1}
     DOMAIN=${ESCAPE}
     www_domain ${1}
     if [ "${LSV}" = 'lsws' ]; then
-        check_duplicate "vhDomain.*${DOMAIN}" ${HTTPD_CONF}
+        check_duplicate "vhDomain.*${DOMAIN}" ${LS_HTTPD_CONF}
+        if [ "${CK_RESULT}" != '' ]; then
+            echo "# It appears the domain already exist! Check the ${LS_HTTPD_CONF} if you believe this is a mistake!"
+            exit 1
+        fi    
     elif [ "${LSV}" = 'openlitespeed' ]; then
-        check_duplicate "member.*${DOMAIN}" ${HTTPD_CONF}
+        check_duplicate "member.*${DOMAIN}" ${OLS_HTTPD_CONF}
+        if [ "${CK_RESULT}" != '' ]; then
+            echo "# It appears the domain already exist! Check the ${OLS_HTTPD_CONF} if you believe this is a mistake!"
+            exit 1
+        fi        
     fi
-    if [ "${CK_RESULT}" != '' ]; then
-        echo "# It appears the domain already exist! Check the ${HTTPD_CONF} if you believe this is a mistake!"
-        exit 1
-    else
-        if [ "${LSV}" = 'lsws' ]; then
-            fst_match_line 'ccl.xml</templateFile>' ${HTTPD_CONF}
-            NEWNUM=$((FIRST_LINE_NUM+1))
-            sed -i "${NEWNUM}i \ \ \ \ \ \ <member>\n \ \ \ \ \ \ \ <vhName>${1}</vhName>\n \ \ \ \ \ \ \ <vhDomain>${1},${WWW_DOMAIN}</vhDomain>\n \ \ \ \ \ \ </member>" ${HTTPD_CONF}
-        elif [ "${LSV}" = 'openlitespeed' ]; then    
-            perl -0777 -p -i -e 's/(vhTemplate centralConfigLog \{[^}]+)\}*(^.*listeners.*$)/\1$2
-  member '${1}' {
-    vhDomain              '${1},${WWW_DOMAIN}'
-  }/gmi' ${HTTPD_CONF}
-        fi
-    fi
+    add_ls_domain
+    add_ols_domain
+}
+
+del_ls_domain(){
+    fst_match_line "<vhName>*${1}" ${LS_HTTPD_CONF}
+    FIRST_LINE_NUM=$((FIRST_LINE_NUM-1))
+    lst_match_line ${FIRST_LINE_NUM} ${LS_HTTPD_CONF} '</member>'
+    sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${LS_HTTPD_CONF}
+}
+
+del_ols_domain(){
+    fst_match_line ${1} ${OLS_HTTPD_CONF}
+    lst_match_line ${FIRST_LINE_NUM} ${OLS_HTTPD_CONF} '}'
+    sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${OLS_HTTPD_CONF}    
 }
 
 del_domain(){
@@ -93,25 +113,20 @@ del_domain(){
     dot_escape ${1}
     DOMAIN=${ESCAPE}
     if [ "${LSV}" = 'lsws' ]; then
-        check_duplicate "vhDomain.*${DOMAIN}" ${HTTPD_CONF}
+        check_duplicate "vhDomain.*${DOMAIN}" ${LS_HTTPD_CONF}
+        if [ "${CK_RESULT}" = '' ]; then
+            echo "# Domain non-exist! Check the ${LS_HTTPD_CONF} if you believe this is a mistake!"
+            exit 1
+        fi
     elif [ "${LSV}" = 'openlitespeed' ]; then
-        check_duplicate "member.*${DOMAIN}" ${HTTPD_CONF}
+        check_duplicate "member.*${DOMAIN}" ${OLS_HTTPD_CONF}
+        if [ "${CK_RESULT}" = '' ]; then
+            echo "# Domain non-exist! Check the ${OLS_HTTPD_CONF} if you believe this is a mistake!"
+            exit 1
+        fi        
     fi
-    if [ "${CK_RESULT}" = '' ]; then
-        echo "# We couldn't find the domain you wanted to remove! Check the ${HTTPD_CONF} if you believe this is a mistake!"
-        exit 1
-    else
-        if [ "${LSV}" = 'lsws' ]; then
-            fst_match_line "<vhName>*${1}" ${HTTPD_CONF}
-            FIRST_LINE_NUM=$((FIRST_LINE_NUM-1))
-            lst_match_line ${FIRST_LINE_NUM} ${HTTPD_CONF} '</member>'
-            sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${HTTPD_CONF}
-        elif [ "${LSV}" = 'openlitespeed' ]; then     
-            fst_match_line ${1} ${HTTPD_CONF}
-            lst_match_line ${FIRST_LINE_NUM} ${HTTPD_CONF} '}'
-            sed -i "${FIRST_LINE_NUM},${LAST_LINE_NUM}d" ${HTTPD_CONF}
-        fi    
-    fi
+    del_ls_domain ${1}
+    del_ols_domain ${1}
 }
 
 check_input ${1}
