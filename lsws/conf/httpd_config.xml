@@ -192,10 +192,6 @@
       <address>*:443</address>
       <secure>1</secure>
       <vhostMapList>
-        <vhostMap>
-          <vhost>Example</vhost>
-          <domain>*</domain>
-        </vhostMap>
       </vhostMapList>
       <keyFile>$SERVER_ROOT/admin/conf/webadmin.key</keyFile>
       <certFile>$SERVER_ROOT/admin/conf/webadmin.crt</certFile>
@@ -205,10 +201,6 @@
       <address>*:80</address>
       <secure>0</secure>
       <vhostMapList>
-        <vhostMap>
-          <vhost>Example</vhost>
-          <domain>*</domain>
-        </vhostMap>
       </vhostMapList>
     </listener>
   </listenerList>
