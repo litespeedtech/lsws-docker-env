@@ -11,10 +11,10 @@ help_message(){
 }
 
 check_lsv(){
-    if [ -f ${LSDIR}/bin/litespeed ]; then
-        LSV='lsws'
-    elif [ -f ${LSDIR}/bin/openlitespeed ]; then
+    if [ -f ${LSDIR}/bin/openlitespeed ]; then
         LSV='openlitespeed'
+    elif [ -f ${LSDIR}/bin/litespeed ]; then
+        LSV='lsws'
     else
         echo 'Version not exist, abort!'
         exit 1     
