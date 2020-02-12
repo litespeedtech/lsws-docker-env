@@ -49,6 +49,7 @@
     <cache>
       <cacheEngine>7</cacheEngine>
       <storage>
+        <cacheStorePath>/var/www/vhosts/lscache/</cacheStorePath>
         <litemage>0</litemage>
       </storage>
       <cachePolicy>
