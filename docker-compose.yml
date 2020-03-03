@@ -13,12 +13,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   litespeed:
-    build:                                                                                                             
-      context: ./config/litespeed/${LITESPEED}/                                                                      
-      args:
-        #extensions: lsphp74 lsphp74-common lsphp74-mysql lsphp74-json                                                                                    
-        extensions: vim
-    image: litespeedtech/litespeed-beta:${LITESPEED}
+    image: litespeedtech/litespeed-beta:${LSWS_VERSION}-${PHP_VERSION}
     env_file:
       - .env
     volumes:
@@ -26,7 +21,7 @@ services:
         - ./lsws/admin/conf:/usr/local/lsws/admin/conf
         - ./bin/container:/usr/local/bin
         - ./sites:/var/www/vhosts/
-        - ./certs:/etc/letsencrypt/
+        - ./acme:/root/.acme.sh/
         - ./logs:/usr/local/lsws/logs/
     ports:
       - 80:80

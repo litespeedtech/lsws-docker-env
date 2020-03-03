@@ -1,6 +1,5 @@
-language: bash
-
-sudo: 'required'
+language: shell
+os: linux
 
 notifications:
   email:
@@ -26,7 +25,6 @@ before_install:
 
 install:
   - git clone https://github.com/litespeedtech/lsws-docker-env.git
-  - docker build --tag litespeedtech/litespeed-beta:5.4.5 config/litespeed/5.4.5
   - docker-compose up -d
 
 before_script:
@@ -35,10 +33,6 @@ before_script:
 
 script:  
   - ./.travis/verify.sh
-
-after_success:
-  - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-  - docker push litespeedtech/litespeed-beta:5.4.5
 
 after_script:
   - docker-compose stop

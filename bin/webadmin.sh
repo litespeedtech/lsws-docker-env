@@ -11,7 +11,10 @@ help_message(){
     echo 'Example: webadmin -modsec enable'
     echo 'Command [-lsup]'
     echo 'Example: webadmin.sh -lsup'
-    echo 'Will upgrade to latest stable version' 
+    echo 'Will upgrade to latest stable version'
+    echo 'Command [-s]'
+    echo 'Example: webadmin.sh -s SERIAL'
+    echo 'Will apply serial to LSWS'
     exit 0
 }
 
@@ -24,6 +27,11 @@ check_input(){
 
 lsws_restart(){
     docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+}
+
+apply_serial(){
+    docker-compose exec ${CONT_NAME} su -c "serialctl.sh -s ${1}"
+    lsws_restart
 }
 
 mod_secure(){
@@ -65,9 +73,12 @@ while [ ! -z "${1}" ]; do
         -modsec | -sec| --sec) shift
             mod_secure ${1}
             ;;
-        -lsup | -upgrade) shift
+        -lsup | --lsup | -upgrade | -U) shift
             ls_upgrade
-            ;;            
+            ;;
+        -[sS] | -serial) shift
+            apply_serial ${1}
+            ;;             
         *) 
             main ${1}
             ;;              
