@@ -90,31 +90,64 @@ bash bin/demosite.sh
 ```
 ### Creating a Domain and Virtual Host
 ```
-bash bin/domain.sh -add example.com
+bash bin/domain.sh [-A, --add] example.com
+```
+### Deleting a Domain and Virtual Host
+```
+bash bin/domain.sh [-D, --del] example.com
 ```
 ### Creating a Database
 You can either automatically generate the user, password, and database names, or specify them. Use the following to auto generate:
 ```
-bash bin/database.sh -domain example.com
+bash bin/database.sh [-D, --domain] example.com
 ```
 Use this command to specify your own names, substituting `user_name`, `my_password`, and `database_name` with your preferred values:
 ```
-bash bin/database.sh -domain example.com -user user_name -password my_password -database database_name
+bash bin/database.sh [-D, --domain] example.com [-U, --user] USER_NAME [-P, --password] MY_PASS [-DB, --database] DATABASE_NAME
 ```
 ### Installing a WordPress Site
 To preconfigure the `wp-config` file, run the `database.sh` script for your domain, before you use the following command to install WordPress:
 ```
-./bin/appinstall.sh -app wordpress -domain example.com
+./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com
+```
+### Install ACME 
+We need to run the ACME installation command the **first time only**. 
+With email notification:
+```
+./bin/acme.sh [-I, --install] [-E, --email] EMAIL_ADDR
+```
+Without email notification:
+```
+./bin/acme.sh [-I, --install] [-NE, --no-email]
 ```
 ### Applying a Let's Encrypt Certificate
 Use the root domain in this command, and it will check for a certificate and automatically apply one with and without `www`:
 ```
-./bin/cert.sh example.com
+./bin/acme.sh [-D, --domain] example.com
 ```
 ### Update Web Server
-To upgrade web server to latest stable version, run
+To upgrade the web server to latest stable version, run the following:
 ```
-bash bin/webadmin.sh -lsup
+bash bin/webadmin.sh [-U, --upgrade]
+```
+### Apply OWASP ModSecurity
+Enable OWASP `mod_secure` on the web server: 
+```
+bash bin/webadmin.sh [-M, --mod-secure] enable
+```
+Disable OWASP `mod_secure` on the web server: 
+```
+bash bin/webadmin.sh [-M, --mod-secure] disable
+```
+
+### Apply license to LSWS
+Apply your license with command:
+```
+bash bin/webadmin.sh [-S, --serial] YOUR_SERIAL
+```
+Apply trial license to server with command:
+```
+bash bin/webadmin.sh [-S, --serial] TRIAL
 ```
 
 ### Accessing the Database

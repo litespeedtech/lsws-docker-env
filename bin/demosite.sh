@@ -7,7 +7,7 @@ DOC_FD=''
 help_message(){
     case ${1} in
         "1")    
-        echo "Script will get 'DOMAIN' and 'database info'from .env file and install the wordpress site for you at the first time."
+        echo "Script will get 'DOMAIN' and 'database info' from .env file and auto-install the wordpress site for you at the first time."
         ;;
         "2")
         echo 'Service finished, enjoy your accelarated LiteSpeed server!'

@@ -21,7 +21,15 @@ backup_old(){
     fi
 }
 
+detect_ols(){
+    if [ -e ${LSDIR}/bin/openlitespeed ]; then
+        echo '[X] Detect OpenLiteSpeed, abort!'
+        exit 1
+    fi    
+}
+
 apply_serial(){
+    detect_ols
     check_input ${1}
     echo ${1} | grep -i 'trial' >/dev/null
     if [ ${?} = 0 ]; then 
