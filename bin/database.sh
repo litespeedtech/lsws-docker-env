@@ -78,12 +78,7 @@ EOT
     fi    
 }
 
-add_sql_client(){
-    docker-compose exec mysql su -c 'apk add mysql-client'
-}
-
 check_db_access(){
-    #add_sql_client
     docker-compose exec mysql su -c "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'status'" >/dev/null 2>&1
     if [ ${?} != 0 ]; then
         echo "DB access failed, please check!"
