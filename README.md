@@ -107,6 +107,7 @@ bash bin/demosite.sh
 ```
 bash bin/domain.sh [-A, --add] example.com
 ```
+> Please ignore SSL certificate warnings from the server. They happen if you haven't applied the certificate via ACME.
 ### Deleting a Domain and Virtual Host
 ```
 bash bin/domain.sh [-D, --del] example.com
