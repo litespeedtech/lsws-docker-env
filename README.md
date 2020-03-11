@@ -9,19 +9,23 @@ Install a Lightweight WordPress container with LiteSpeed stable version based on
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
 2. [Install Docker Compose](https://docs.docker.com/compose/)
-3. Clone this repository or copy the files from this repository into a new folder:
-```
-git clone https://github.com/litespeedtech/lsws-docker-env.git
-```
 
 ## Configuration
 Edit the `.env` file to update the demo site domain, default MySQL user, and password.
+Feel free to check [Docker hub Tag page](https://hub.docker.com/repository/docker/litespeedtech/litespeed/tags) if you want to update default openlitespeed and php versions. 
 
 ## Installation
+Clone this repository or copy the files from this repository into a new folder:
+```
+git clone https://github.com/litespeedtech/lsws-docker-env.git
+```
 Open a terminal, `cd` to the folder in which `docker-compose.yml` is saved, and run:
 ```
 docker-compose up
 ```
+
+Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/lsws-dockerfiles#usage).
+
 
 ## Components
 The docker image installs the following packages on your system:
