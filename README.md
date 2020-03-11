@@ -1,10 +1,10 @@
-# LiteSpeed WordPress Docker Container (Beta)
+# LiteSpeed WordPress Docker Container
 [![Build Status](https://travis-ci.com/litespeedtech/lsws-docker-env.svg?branch=master)](https://hub.docker.com/r/litespeedtech/litespeed)
-[![LiteSpeed](https://img.shields.io/badge/litespeed-5.4.5-informational?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/litespeed)
 [![docker pulls](https://img.shields.io/docker/pulls/litespeedtech/litespeed?style=flat&color=blue)](https://hub.docker.com/r/litespeedtech/litespeed)
-[![beta pulls](https://img.shields.io/docker/pulls/litespeedtech/litespeed-beta?label=beta%20pulls)](https://hub.docker.com/r/litespeedtech/litespeed-beta)
+[<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
+[<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a Lightweight WordPress container with LiteSpeed 5.4.5+ & PHP 7.3+ based on Ubuntu 18.04 Linux.
+Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 18.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
@@ -31,17 +31,46 @@ The docker image installs the following packages on your system:
 |Linux|Ubuntu 18.04|
 |LiteSpeed|[Latest version](https://www.litespeedtech.com/products/litespeed-web-server/download)|
 |MariaDB|[Stable version: 10.3](https://hub.docker.com/_/mariadb)|
-|PHP|[Stable version: 7.3](http://rpms.litespeedtech.com/debian/)|
+|PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
-|Certbot|[Latest from Certbot's PPA](https://launchpad.net/~certbot/+archive/ubuntu/certbot)|
+|ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
 |phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/bitnami/phpmyadmin/)|
 
 ## Data Structure
-There is a `sites` directory next to your `docker-compose.yml` file, and it contains the following:
+Cloned project 
+```bash
+├── acme
+├── bin
+│   └── container
+├── data
+│   └── db
+├── logs
+│   ├── access.log
+│   ├── error.log
+│   ├── lsrestart.log
+│   └── stderr.log
+├── lsws
+│   ├── admin-conf
+│   └── conf
+├── sites
+│   └── localhost
+├── LICENSE
+├── README.md
+└── docker-compose.yml
+```
 
-* `sites/DOMAIN/html/` – Document root (the WordPress application will install here)
-* `sites/DOMAIN/logs/` - Access log storage
+  * `acme` contains all applied certificates from Lets Encrypt
+
+  * `bin` contains multiple CLI scripts to allow you add or delete virtual hosts, install applications, upgrade, etc 
+
+  * `data` stores the MySQL database
+
+  * `logs` contains all of the web server logs and virtual host access logs
+
+  * `lsws` contains all web server configuration files
+
+  * `sites` contains the document roots (the WordPress application will install here)
 
 ## Usage
 ### Starting a Container
@@ -64,20 +93,6 @@ To stop and remove all containers, use the `down` command:
 ```
 docker-compose down
 ```
-### Installing Packages
-Edit the `docker-compose.yml` file, and add the package name as an `extensions` argument. We used `vim` in this example:
-```
-litespeed:
-  build:
-    context: ./config/litespeed/xxx/
-    args:
-      extensions: vim
-```
-After saving the changed configuration, run with `--build`:
-```
-docker-compose up --build
-```
-
 ### Setting the WebAdmin Password
 We strongly recommend you set your personal password right away.
 ```
@@ -152,6 +167,25 @@ bash bin/webadmin.sh [-S, --serial] TRIAL
 
 ### Accessing the Database
 After installation, you can use phpMinAdmin to access the database by visiting http://127.0.0.1:8080 or https://127.0.0.1:8443. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
+
+## Customization
+If you want to customize the image by adding some packages, e.g. `lsphp74-pspell`, just extend it with a Dockerfile. 
+1. We can create a `custom` folder and a `custom/Dockerfile` file under the main project. 
+2. Add the following example code to `Dockerfile` under the custom folder
+```
+FROM litespeedtech/litespeed:latest
+RUN apt-get update && apt-get install lsphp74-pspell
+```
+3. Add `build: ./custom` line under the "image: litespeedtech" of docker-composefile. So it will looks like this 
+```
+  litespeed:
+    image: litespeedtech/litespeed:${LSWS_VERSION}-${PHP_VERSION}
+    build: ./custom
+```
+4. Build and start it with command:
+```
+docker-compose up --build
+```
 
 ## Support & Feedback
 If you still have a question after using LiteSpeed Docker, you have a few options.
