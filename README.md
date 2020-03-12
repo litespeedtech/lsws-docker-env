@@ -88,6 +88,8 @@ docker-compose up -d
 ```
 The container is now built and running. 
 
+Note: The container will auto-apply a 15-day trial license. Please contact LiteSpeed to extend the trial, or apply your own license, [starting from $0](https://www.litespeedtech.com/pricing).
+
 ### Stopping a Container
 ```
 docker-compose stop
@@ -130,7 +132,7 @@ To preconfigure the `wp-config` file, run the `database.sh` script for your doma
 ```
 ./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com
 ```
-### Install ACME 
+### Installing ACME 
 We need to run the ACME installation command the **first time only**. 
 With email notification:
 ```
@@ -145,12 +147,12 @@ Use the root domain in this command, and it will check for a certificate and aut
 ```
 ./bin/acme.sh [-D, --domain] example.com
 ```
-### Update Web Server
+### Updating Web Server
 To upgrade the web server to latest stable version, run the following:
 ```
 bash bin/webadmin.sh [-U, --upgrade]
 ```
-### Apply OWASP ModSecurity
+### Applying OWASP ModSecurity
 Enable OWASP `mod_secure` on the web server: 
 ```
 bash bin/webadmin.sh [-M, --mod-secure] enable
@@ -160,7 +162,7 @@ Disable OWASP `mod_secure` on the web server:
 bash bin/webadmin.sh [-M, --mod-secure] disable
 ```
 >Please ignore ModSecurity warnings from the server. They happen if some of the rules are not supported by the server.
-### Apply license to LSWS
+### Applying license to LSWS
 Apply your license with command:
 ```
 bash bin/webadmin.sh [-S, --serial] YOUR_SERIAL
