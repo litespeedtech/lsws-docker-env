@@ -111,7 +111,7 @@ bash bin/demosite.sh
 ```
 bash bin/domain.sh [-A, --add] example.com
 ```
-> Please ignore SSL certificate warnings from the server. They happen if you haven't applied the certificate via ACME.
+> Please ignore SSL certificate warnings from the server. They happen if you haven't applied the certificate.
 ### Deleting a Domain and Virtual Host
 ```
 bash bin/domain.sh [-D, --del] example.com
@@ -159,7 +159,7 @@ Disable OWASP `mod_secure` on the web server:
 ```
 bash bin/webadmin.sh [-M, --mod-secure] disable
 ```
-
+>Please ignore ModSecurity warnings from the server. They happen if some of the rules are not supported by the server.
 ### Apply license to LSWS
 Apply your license with command:
 ```

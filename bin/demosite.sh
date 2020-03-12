@@ -14,6 +14,7 @@ help_message(){
     case ${1} in
         "1")    
             echow "Script will get 'DOMAIN' and 'database' info from .env file, then auto setup virtual host and the wordpress site for you."
+            exit 0
         ;;
         "2")
             echow 'Service finished, enjoy your accelarated LiteSpeed server!'
