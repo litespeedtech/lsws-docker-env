@@ -12,7 +12,7 @@ Install a Lightweight WordPress container with LiteSpeed stable version based on
 
 ## Configuration
 Edit the `.env` file to update the demo site domain, default MySQL user, and password.
-Feel free to check [Docker hub Tag page](https://hub.docker.com/repository/docker/litespeedtech/litespeed/tags) if you want to update default openlitespeed and php versions. 
+Feel free to check [Docker hub Tag page](https://hub.docker.com/repository/docker/litespeedtech/litespeed/tags) if you want to update default litespeed and php versions. 
 
 ## Installation
 Clone this repository or copy the files from this repository into a new folder:
