@@ -1,18 +1,18 @@
 version: '3'
 services:
   mysql:
+    container_name: mysql
     image: mariadb:10.3.17
-    command: --max_allowed_packet=256M
+    command: --max_allowed_packet=256M --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
-    ports:
-       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   litespeed:
+    container_name: litespeed
     image: litespeedtech/litespeed:${LSWS_VERSION}-${PHP_VERSION}
     env_file:
       - .env
@@ -31,10 +31,10 @@ services:
     restart: always
     environment:
       TZ: ${TimeZone}
-  phpmyadmin:
-    image: bitnami/phpmyadmin:latest
+  adminer:
+    container_name: adminer
+    image: adminer
     ports:
-      - 8080:80
-      - 8443:443
+      - 8080:8080
     environment:
-        DATABASE_HOST: mysql
+        ADMINER_DEFAULT_SERVER: mysql
