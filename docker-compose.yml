@@ -31,6 +31,8 @@ services:
     restart: always
     environment:
       TZ: ${TimeZone}
+  memcached:
+    container_name: memcached
   adminer:
     container_name: adminer
     image: adminer
