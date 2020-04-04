@@ -2,7 +2,7 @@ version: '3'
 services:
   mysql:
     image: mariadb:10.3.17
-    command: --max_allowed_packet=256M
+    command: --max_allowed_packet=256M --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
     ports:
