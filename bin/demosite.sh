@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 source .env
-APP_NAME='wordpress'
+APP='wordpress'
 CONT_NAME='litespeed'
 DOC_FD=''
+EPACE='        '
+SAMPLE=''
 
 echow(){
     FLAG=${1}
@@ -12,8 +14,17 @@ echow(){
 
 help_message(){
     case ${1} in
-        "1")    
+        "1")   
             echow "Script will get 'DOMAIN' and 'database' info from .env file, then auto setup virtual host and the wordpress site for you."
+            echo -e "\033[1mOPTIONS\033[0m"
+            echow '-W, --wordpress'
+            echo "${EPACE}${EPACE}Example: lsws1clk.sh -W. If no input, script will still install wordpress by default"
+            echow '-M, --magento'
+            echo "${EPACE}${EPACE}Example: lsws1clk.sh -M"
+            echow '-M, --magento -S, --sample'
+            echo "${EPACE}${EPACE}Example: lsws1clk.sh -M -S, to install sample data"
+            echow '-H, --help'
+            echo "${EPACE}${EPACE}Display help and exit." 
             exit 0
         ;;
         "2")
@@ -57,6 +68,22 @@ create_db(){
     fi    
 }    
 
+set_phpmemory(){
+    if [ "${1}" = 'magento' ]; then 
+        PHP_INI=$(docker-compose exec litespeed su -c "php -i | grep 'Loaded Configuration File' | cut -d' ' -f5 " | tr -d '\r')
+        PHP_MEMORY=$(docker-compose exec litespeed su -c "cat $PHP_INI | grep memory_limit" | tr -d '\r')
+        docker-compose exec litespeed su -c "sed -i 's/^memory_limit.*/memory_limit = 512M/g' $PHP_INI"
+        echo PHP_INI $PHP_INI
+        echo PHP_MEMORY $PHP_MEMORY
+    fi    
+}
+
+revert_phpmemory(){
+    if [ "${1}" = 'magento' ]; then 
+        docker-compose exec litespeed /bin/bash -c "sed -i 's/^memory_limit.*/$PHP_MEMORY/g' $PHP_INI"
+    fi    
+}    
+
 store_credential(){
     if [ -f ${DOC_FD}/.db_pass ]; then
         echo '[O] db file exist!'
@@ -70,8 +97,19 @@ EOT
     fi
 }
 
+install_packages(){
+    if [ "${1}" = 'wordpress' ]; then
+        docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package ed"
+        docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package unzip"  
+    elif [ "${1}" = 'magento' ]; then
+        docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package composer"
+        docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package git"
+    fi    
+}
+
 app_download(){
-    docker-compose exec ${CONT_NAME} su -c "appinstallctl.sh --app ${1} --domain ${2}"
+    install_packages ${1}
+    docker-compose exec --user 1000:1000 ${CONT_NAME} bash -c "appinstallctl.sh --app ${1} --domain ${2} ${3}"
 }
 
 lsws_restart(){
@@ -83,9 +121,10 @@ main(){
     gen_root_fd ${DOMAIN}
     create_db ${DOMAIN}
     store_credential
-    app_download ${APP_NAME} ${DOMAIN}
+    set_phpmemory ${APP}
+    app_download ${APP} ${DOMAIN} ${SAMPLE}
+    revert_phpmemory ${APP}
     lsws_restart
-    help_message 2
 }
 
 while [ ! -z "${1}" ]; do
@@ -93,6 +132,15 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message 1
             ;;
+        -[wW] | --wordpress)
+            APP='wordpress'
+            ;;
+        -[mM] | --magento)
+            APP='magento'
+            ;;
+		-[sS] | --sample)
+            SAMPLE='-S'
+            ;;            
         *) 
             help_message 1
             ;;              

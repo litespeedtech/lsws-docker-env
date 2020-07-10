@@ -1,18 +1,39 @@
 #!/bin/bash
+
 DEFAULT_VH_ROOT='/var/www/vhosts'
 VH_DOC_ROOT=''
-VHNAME=''
-APP_NAME=''
+APP=''
 DOMAIN=''
 WWW_UID=''
 WWW_GID=''
+USER='1000'
 WP_CONST_CONF=''
-PUB_IP=$(curl -s http://checkip.amazonaws.com)
 DB_HOST='mysql'
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
+LSDIR='/usr/local/lsws'
+PHP_MEMORY='777'
+MA_COMPOSER='/usr/local/bin/composer'
+MA_VER='2.3.4'
+EMAIL='test@example.com'
+APP_ACCT=''
+APP_PASS=''
+MA_BACK_URL=''
+SKIP_WP=0
+app_skip=0
+SAMPLE='false'
 EPACE='        '
 
+echoY() {
+    echo -e "\033[38;5;148m${1}\033[39m"
+}
+echoG() {
+    echo -e "\033[38;5;71m${1}\033[39m"
+}
+echoR()
+{
+    echo -e "\033[38;5;203m${1}\033[39m"
+}
 echow(){
     FLAG=${1}
     shift
@@ -20,17 +41,26 @@ echow(){
 }
 
 help_message(){
-	echo -e "\033[1mOPTIONS\033[0m"
-    echow '-A, -app [wordpress] -D, --domain [DOMAIN_NAME]'
-    echo "${EPACE}${EPACE}Example: appinstallctl.sh --app wordpress --domain example.com"
-    echow '-H, --help'
-    echo "${EPACE}${EPACE}Display help and exit."
-    exit 0
+    case ${1} in
+        "1")   	
+			echo -e "\033[1mOPTIONS\033[0m"
+			echow '-A, -app [wordpress|magento] -D, --domain [DOMAIN_NAME]'
+			echo "${EPACE}${EPACE}Example: appinstallctl.sh --app wordpress --domain example.com"
+			echow '-A, -app [wordpress|magento] -D, --domain [DOMAIN_NAME] -S, --sample'
+			echo "${EPACE}${EPACE}Example: appinstallctl.sh --app magento --domain example.com --sample"	
+			echow '-H, --help'
+			echo "${EPACE}${EPACE}Display help and exit."
+			exit 0
+        ;;
+        "2")
+            echow 'Service finished, enjoy your accelarated LiteSpeed server!'
+        ;;
+    esac  
 }
 
 check_input(){
     if [ -z "${1}" ]; then
-        help_message
+        help_message 1
         exit 1
     fi
 }
@@ -45,16 +75,23 @@ linechange(){
 
 ck_ed(){
     if [ ! -f /bin/ed ]; then
-        echo "Install ed package.."
-        apt-get install ed -y > /dev/null 2>&1
+        echo 'ed package not exist, please check!'
+		exit 1
     fi    
 }
 
 ck_unzip(){
     if [ ! -f /usr/bin/unzip ]; then 
-        echo "Install unzip package.."
-        apt-get install unzip -y > /dev/null 2>&1
+        echo 'unzip package not exist, please check!'
+		exit 1
     fi		
+}
+
+gen_pass(){
+	APP_STR=$(shuf -i 100-999 -n1)
+    APP_PASS=$(openssl rand -hex 16)
+	APP_ACCT="admin${APP_STR}"
+	MA_BACK_URL="admin_${APP_STR}"
 }
 
 get_owner(){
@@ -65,6 +102,37 @@ get_owner(){
 		WWW_GID=1000
 		echo "Set owner to ${WWW_UID}"
 	fi
+}
+
+check_composer(){
+    if [ -e ${MA_COMPOSER} ]; then
+        echoG 'Composer already installed'
+    else
+        echoR 'Issue with composer, Please check!'    
+    fi    
+}
+
+check_git(){
+	if [ ! -e /usr/bin/git ]; then
+		echoG 'git package not exist, please check!'
+    fi
+}
+
+check_memory(){
+	M_SIZE=$(grep -E 'MemTotal.*kB' /proc/meminfo | awk '{print $2}')
+    if [ "${M_SIZE}" -le "1000000" ]; then
+	    echoY 'We recommend you to install Magento CMS with Memory size larger than 1GB server!'
+		echoY 'To exit installation process, press Ctrl+C, or it will comtinue the installation after 5s.'
+		sleep 5
+	fi
+}
+
+prevent_php(){
+    GETPHPVER=$(php -v | head -n 1 | cut -d " " -f 2 | cut -f1-2 -d".")
+    if [ "${GETPHPVER}" = '7.4' ]; then
+	    echoR 'Detect non-support PHP version, abort!'
+		exit 1
+	fi	
 }
 
 get_db_pass(){
@@ -78,11 +146,7 @@ get_db_pass(){
 }
 
 set_vh_docroot(){
-	if [ "${VHNAME}" != '' ]; then
-	    VH_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}"
-	    VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}/html"
-		WP_CONST_CONF="${VH_DOC_ROOT}/wp-content/plugins/litespeed-cache/data/const.default.ini"
-	elif [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
+    if [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
 	    VH_ROOT="${DEFAULT_VH_ROOT}/${1}"
         VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${1}/html"
 		WP_CONST_CONF="${VH_DOC_ROOT}/wp-content/plugins/litespeed-cache/data/const.default.ini"
@@ -121,7 +185,7 @@ install_wp_plugin(){
     rm -f ${VH_DOC_ROOT}/wp-content/plugins/*.zip
 }
 
-set_htaccess(){
+config_wp_htaccess(){
     if [ ! -f ${VH_DOC_ROOT}/.htaccess ]; then 
         touch ${VH_DOC_ROOT}/.htaccess
     fi   
@@ -137,14 +201,6 @@ RewriteRule . /index.php [L]
 </IfModule>
 # END WordPress
 EOM
-}
-
-get_theme_name(){
-    THEME_NAME=$(grep WP_DEFAULT_THEME ${VH_DOC_ROOT}/wp-includes/default-constants.php | grep -v '!' | awk -F "'" '{print $4}')
-    echo "${THEME_NAME}" | grep 'twenty' >/dev/null 2>&1
-    if [ ${?} = 0 ]; then
-        THEME="${THEME_NAME}"
-    fi
 }
 
 set_lscache(){ 
@@ -559,11 +615,7 @@ END
 }
 
 preinstall_wordpress(){
-	if [ "${VHNAME}" != '' ]; then
-	    get_db_pass ${VHNAME}
-	else
-		get_db_pass ${DOMAIN}
-	fi	
+	get_db_pass ${DOMAIN}
 	if [ ! -f ${VH_DOC_ROOT}/wp-config.php ] && [ -f ${VH_DOC_ROOT}/wp-config-sample.php ]; then
 		cp ${VH_DOC_ROOT}/wp-config-sample.php ${VH_DOC_ROOT}/wp-config.php
 		NEWDBPWD="define('DB_PASSWORD', '${SQL_PASS}');"
@@ -572,7 +624,6 @@ preinstall_wordpress(){
 		linechange 'DB_USER' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 		NEWDBPWD="define('DB_NAME', '${SQL_DB}');"
 		linechange 'DB_NAME' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
-        #NEWDBPWD="define('DB_HOST', '${PUB_IP}');"
 		NEWDBPWD="define('DB_HOST', '${DB_HOST}');"
 		linechange 'DB_HOST' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 	elif [ -f ${VH_DOC_ROOT}/wp-config.php ]; then
@@ -585,63 +636,204 @@ preinstall_wordpress(){
 }
 
 app_wordpress_dl(){
-	if [ ! -f "${VH_DOC_ROOT}/wp-config.php" ] && [ ! -f "${VH_DOC_ROOT}/wp-config-sample.php" ]; then
+	if [ ! -f "${VH_DOC_ROOT}/wp-config.php" ] && [ ! -f "${VH_DOC_ROOT}/index.php" ]; then
 		wp core download \
 			--allow-root \
 			--quiet
 	else
-	    echo 'wordpress already exist, abort!'
+	    echoR 'wordpress or other file already exist, please manually clean up the document root folder, abort!'
 		exit 1
 	fi
 }
 
-change_owner(){
-		if [ "${VHNAME}" != '' ]; then
-		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${VHNAME} 
-		else
-		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
+clean_magento_cache(){
+    cd ${VH_DOC_ROOT}
+    php bin/magento cache:flush >/dev/null 2>&1
+    php bin/magento cache:clean >/dev/null 2>&1
+}
+
+config_ma_htaccess(){
+    echoG 'Setting Magento htaccess'
+    if [ ! -f ${VH_DOC_ROOT}/.htaccess ]; then
+        echoR "${VH_DOC_ROOT}/.htaccess not exist, skip"
+    else
+        sed -i '1i\<IfModule LiteSpeed>LiteMage on</IfModule>\' ${VH_DOC_ROOT}/.htaccess
+    fi
+}
+
+install_litemage(){
+    echoG '[Start] Install LiteMage'
+    echo -ne '\n' | composer require litespeed/module-litemage
+    bin/magento deploy:mode:set developer; 
+    bin/magento module:enable Litespeed_Litemage; 
+    bin/magento setup:upgrade;
+    bin/magento setup:di:compile; 
+    bin/magento deploy:mode:set production;
+    echoG '[End] LiteMage install'
+    clean_magento_cache
+}
+
+config_litemage(){
+    bin/magento config:set --scope=default --scope-code=0 system/full_page_cache/caching_application LITEMAGE
+}
+
+app_magento_dl(){
+    if [ ! -f "${VH_DOC_ROOT}/app/functions.php" ] && [ ! -f "${VH_DOC_ROOT}/index.php" ]; then
+		rm -f ${MA_VER}.tar.gz
+		wget -q --no-check-certificate https://github.com/magento/magento2/archive/${MA_VER}.tar.gz
+		if [ ${?} != 0 ]; then
+			echoR "Download ${MA_VER}.tar.gz failed, abort!"
+			exit 1
 		fi
+		tar -zxf ${MA_VER}.tar.gz
+		mv magento2-${MA_VER}/* ${VH_DOC_ROOT}
+		mv magento2-${MA_VER}/.editorconfig ${VH_DOC_ROOT}
+		mv magento2-${MA_VER}/.htaccess ${VH_DOC_ROOT}
+		mv magento2-${MA_VER}/.php_cs.dist ${VH_DOC_ROOT}
+		mv magento2-${MA_VER}/.user.ini ${VH_DOC_ROOT}
+		rm -rf ${MA_VER}.tar.gz magento2-${MA_VER}	
+	else
+	    echoR 'Magento file or other file exist, please manually clean up the document root folder, abort!'
+		exit 1
+	fi		
+}
+
+install_magento(){
+	if [ ${app_skip} = 0 ]; then
+		echoG 'Run Composer install'
+		echo -ne '\n' | composer install
+		echoG 'Composer install finished'
+		if [ ! -e ${VH_DOC_ROOT}/vendor/autoload.php ]; then
+			echoR "/vendor/autoload.php not found, need to check"
+			sleep 10
+			ls ${VH_DOC_ROOT}/vendor/
+		fi
+		get_db_pass ${DOMAIN}
+		echoG 'Install Magento...'
+		./bin/magento setup:install \
+			--db-name=${SQL_DB} \
+			--db-user=${SQL_USER} \
+			--db-password=${SQL_PASS} \
+			--db-host=${DB_HOST} \
+			--admin-user=${APP_ACCT} \
+			--admin-password=${APP_PASS} \
+			--admin-email=${EMAIL} \
+			--admin-firstname=test \
+			--admin-lastname=account \
+			--language=en_US \
+			--currency=USD \
+			--timezone=America/Chicago \
+			--use-rewrites=1 \
+			--backend-frontname=${MA_BACK_URL}
+		
+		./bin/magento config:set web/unsecure/base_url http://${DOMAIN}/ 
+		./bin/magento config:set web/secure/base_url https://${DOMAIN}/
+		if [ ${?} = 0 ]; then
+			echoG 'Magento install finished'
+		else
+			echoR 'Not working properly!'    
+		fi 
+		change_owner ${VH_DOC_ROOT}
+		echo "Set owner to ${VH_DOC_ROOT}"
+		echo "Set owner to ${WWW_UID}"
+		echo "Set owner to ${WWW_GID}"
+	fi
+}
+
+install_ma_sample(){
+    if [ "${SAMPLE}" = 'true' ]; then
+        echoG 'Start installing Magento 2 sample data'
+        git clone https://github.com/magento/magento2-sample-data.git
+        cd magento2-sample-data
+        git checkout ${MA_VER}
+        php -f dev/tools/build-sample-data.php -- --ce-source="${VH_DOC_ROOT}"
+        echoG 'Update permission'
+        change_owner ${VH_DOC_ROOT}; cd ${VH_DOC_ROOT}
+        find . -type d -exec chmod g+ws {} +
+        rm -rf var/cache/* var/page_cache/* var/generation/*
+        echoG 'Upgrade'
+    	php bin/magento setup:upgrade >/dev/null
+        echoG 'Deploy static content'
+        php bin/magento setup:static-content:deploy
+        echoG 'End installing Magento 2 sample data'
+    fi
+}
+
+change_owner(){
+	    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
+}
+
+store_access(){
+    cat << EOM > ${VH_ROOT}/.app_access
+Account: ${APP_ACCT}
+Password: ${APP_PASS}
+Admin_URL: ${MA_BACK_URL}
+EOM
+}
+
+show_access(){
+	echoG '----------------------------------------'
+	echoY "Account: ${APP_ACCT}"
+	echoY "Password: ${APP_PASS}"
+	echoY "Admin_URL: ${MA_BACK_URL}"
+	echoG '----------------------------------------'
 }
 
 main(){
 	set_vh_docroot ${DOMAIN}
 	get_owner
+	gen_pass
 	cd ${VH_DOC_ROOT}
-	if [ "${APP_NAME}" = 'wordpress' ] || [ "${APP_NAME}" = 'wp' ]; then
+	if [ "${APP}" = 'wordpress' ] || [ "${APP}" = 'W' ]; then
 		check_sql_native
 		app_wordpress_dl
 		preinstall_wordpress
 		install_wp_plugin
-		set_htaccess
-		get_theme_name
+		config_wp_htaccess
 		set_lscache
 		change_owner
 		exit 0
+	elif [ "${APP}" = 'magento' ] || [ "${APP}" = 'M' ]; then
+	    prevent_php
+		check_memory
+		check_composer
+		check_git
+		app_magento_dl
+		install_magento
+		install_litemage
+		config_ma_htaccess
+        config_litemage
+		install_ma_sample
+		change_owner
+		show_access
+		store_access
+		exit 0	
 	else
-		echo "APP: ${APP_NAME} not support, exit!"
+		echo "APP: ${APP} not support, exit!"
 		exit 1	
 	fi
+	help_message 2
 }
 
 check_input ${1}
 while [ ! -z "${1}" ]; do
 	case ${1} in
 		-[hH] | -help | --help)
-			help_message
+			help_message 1
 			;;
 		-[aA] | -app | --app) shift
 			check_input "${1}"
-			APP_NAME="${1}"
+			APP="${1}"
 			;;
 		-[dD] | -domain | --domain) shift
 			check_input "${1}"
 			DOMAIN="${1}"
 			;;
-		-vhname | --vhname) shift
-			VHNAME="${1}"
-			;;	       
+		-[sS] | --sample)
+            SAMPLE='true'
+            ;;			      
 		*) 
-			help_message
+			help_message 1
 			;;              
 	esac
 	shift
