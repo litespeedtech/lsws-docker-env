@@ -12,8 +12,14 @@ DB_HOST='mysql'
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
 LSDIR='/usr/local/lsws'
+<<<<<<< HEAD
 MA_COMPOSER='/usr/local/bin/composer'
 MA_VER='2.4.0'
+=======
+PHP_MEMORY='777'
+MA_COMPOSER='/usr/local/bin/composer'
+MA_VER='2.3.4'
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
 EMAIL='test@example.com'
 APP_ACCT=''
 APP_PASS=''
@@ -111,6 +117,7 @@ check_composer(){
     fi    
 }
 
+<<<<<<< HEAD
 check_els_service(){
 	echoG 'Check elasticsearch service:'
 	service elasticsearch status | grep 'running' | grep -v 'not'
@@ -122,6 +129,8 @@ check_els_service(){
 	fi
 }
 
+=======
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
 check_git(){
 	if [ ! -e /usr/bin/git ]; then
 		echoG 'git package not exist, please check!'
@@ -735,6 +744,10 @@ install_magento(){
 			--timezone=America/Chicago \
 			--use-rewrites=1 \
 			--backend-frontname=${MA_BACK_URL}
+<<<<<<< HEAD
+=======
+		
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
 		./bin/magento config:set web/unsecure/base_url http://${DOMAIN}/ 
 		./bin/magento config:set web/secure/base_url https://${DOMAIN}/
 		if [ ${?} = 0 ]; then
@@ -803,10 +816,16 @@ main(){
 		change_owner
 		exit 0
 	elif [ "${APP}" = 'magento' ] || [ "${APP}" = 'M' ]; then
+<<<<<<< HEAD
 	    #prevent_php
 		check_memory
 		check_composer
 		#check_els_service
+=======
+	    prevent_php
+		check_memory
+		check_composer
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
 		check_git
 		app_magento_dl
 		install_magento

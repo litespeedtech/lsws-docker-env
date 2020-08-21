@@ -72,7 +72,11 @@ set_phpmemory(){
     if [ "${1}" = 'magento' ]; then 
         PHP_INI=$(docker-compose exec litespeed su -c "php -i | grep 'Loaded Configuration File' | cut -d' ' -f5 " | tr -d '\r')
         PHP_MEMORY=$(docker-compose exec litespeed su -c "cat $PHP_INI | grep memory_limit" | tr -d '\r')
+<<<<<<< HEAD
         docker-compose exec litespeed su -c "sed -i 's/^memory_limit.*/memory_limit = 755M/g' $PHP_INI"
+=======
+        docker-compose exec litespeed su -c "sed -i 's/^memory_limit.*/memory_limit = 512M/g' $PHP_INI"
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
         echo PHP_INI $PHP_INI
         echo PHP_MEMORY $PHP_MEMORY
     fi    
@@ -103,16 +107,23 @@ install_packages(){
         docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package unzip"  
     elif [ "${1}" = 'magento' ]; then
         docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package composer"
+<<<<<<< HEAD
         docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package systemd"
         docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package elasticsearch"
         docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package unzip"
+=======
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
         docker-compose exec litespeed /bin/bash -c "pkginstallctl.sh --package git"
     fi    
 }
 
 app_download(){
     install_packages ${1}
+<<<<<<< HEAD
     docker-compose exec --user 1000:1000 ${CONT_NAME} bash -c "appinstallctl.sh --app ${1} --domain ${2} ${3}"
+=======
+    docker-compose exec ${CONT_NAME} bash -c "appinstallctl.sh --app ${1} --domain ${2} ${3}"
+>>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
 }
 
 lsws_restart(){
