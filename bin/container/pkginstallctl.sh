@@ -31,13 +31,21 @@ install_ed(){
     if [ ! -f /bin/ed ]; then
         echo "Install ed package.."
         apt-get install ed -y > /dev/null 2>&1
+        ed -V > /dev/null 2>&1
+        if [ ${?} != 0 ]; then
+            echoR 'Issue with ed, Please check!'
+        fi          
     fi    
 }
 
 install_unzip(){
     if [ ! -f /usr/bin/unzip ]; then 
-        echo "Install unzip package.."
+        echoG "Install unzip package"
         apt-get install unzip -y > /dev/null 2>&1
+        unzip -v > /dev/null 2>&1
+        if [ ${?} != 0 ]; then
+            echoR 'Issue with unzip, Please check!'
+        fi          
     fi		
 }
 
@@ -53,6 +61,36 @@ install_composer(){
             echoR 'Issue with composer, Please check!'
         fi        
     fi    
+}
+
+install_systemd(){
+    if [ ! -f /bin/systemd ]; then 
+        echoG "Install systemd package"
+        apt-get install systemd -y > /dev/null 2>&1
+        systemd --version > /dev/null 2>&1
+        if [ ${?} != 0 ]; then
+            echoR 'Issue with systemd, Please check!'
+        fi         
+    fi		
+}
+
+install_elasticsearch(){
+    if [ ! -e /etc/elasticsearch ]; then
+        apt-get install -y gnupg2 >/dev/null 2>&1
+        curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - >/dev/null 2>&1
+        echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list >/dev/null 2>&1
+        apt update >/dev/null 2>&1
+        apt install elasticsearch -y >/dev/null 2>&1
+        echoG 'Start elasticsearch service'
+        service elasticsearch start >/dev/null 2>&1
+        if [ ${?} != 0 ]; then
+            echoR 'Issue with elasticsearch package, Please check!'
+            exit 1
+        fi
+        systemctl enable elasticsearch >/dev/null 2>&1
+    else
+        echoG 'Elasticsearch already exist, skip!'
+    fi     
 }
 
 install_git(){
@@ -78,6 +116,12 @@ case ${1} in
             composer)
                 install_composer
             ;;
+            systemd)
+                install_systemd
+            ;;    
+            elasticsearch)
+                install_elasticsearch
+            ;;    
             git)
                 install_git
             ;;    
