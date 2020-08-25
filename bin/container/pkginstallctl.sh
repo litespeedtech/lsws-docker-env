@@ -31,29 +31,21 @@ install_ed(){
     if [ ! -f /bin/ed ]; then
         echo "Install ed package.."
         apt-get install ed -y > /dev/null 2>&1
-<<<<<<< HEAD
         ed -V > /dev/null 2>&1
         if [ ${?} != 0 ]; then
             echoR 'Issue with ed, Please check!'
         fi          
-=======
->>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
     fi    
 }
 
 install_unzip(){
     if [ ! -f /usr/bin/unzip ]; then 
-<<<<<<< HEAD
         echoG "Install unzip package"
         apt-get install unzip -y > /dev/null 2>&1
         unzip -v > /dev/null 2>&1
         if [ ${?} != 0 ]; then
             echoR 'Issue with unzip, Please check!'
         fi          
-=======
-        echo "Install unzip package.."
-        apt-get install unzip -y > /dev/null 2>&1
->>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
     fi		
 }
 
@@ -71,7 +63,6 @@ install_composer(){
     fi    
 }
 
-<<<<<<< HEAD
 install_systemd(){
     if [ ! -f /bin/systemd ]; then 
         echoG "Install systemd package"
@@ -102,8 +93,6 @@ install_elasticsearch(){
     fi     
 }
 
-=======
->>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
 install_git(){
 	if [ ! -e /usr/bin/git ]; then
 		echoG 'Install git'
@@ -127,15 +116,12 @@ case ${1} in
             composer)
                 install_composer
             ;;
-<<<<<<< HEAD
             systemd)
                 install_systemd
             ;;    
             elasticsearch)
                 install_elasticsearch
             ;;    
-=======
->>>>>>> a312710af2383f5200e672b9a74dd330b6cbeebd
             git)
                 install_git
             ;;    
