@@ -49,57 +49,6 @@ install_unzip(){
     fi		
 }
 
-install_composer(){
-    if [ -e ${MA_COMPOSER} ]; then
-        echoG 'Composer already installed'
-    else
-        echoG 'Going to install composer package'
-        curl -sS https://getcomposer.org/installer | php
-        mv composer.phar ${MA_COMPOSER}
-        composer --version
-        if [ ${?} != 0 ]; then
-            echoR 'Issue with composer, Please check!'
-        fi        
-    fi    
-}
-
-install_systemd(){
-    if [ ! -f /bin/systemd ]; then 
-        echoG "Install systemd package"
-        apt-get install systemd -y > /dev/null 2>&1
-        systemd --version > /dev/null 2>&1
-        if [ ${?} != 0 ]; then
-            echoR 'Issue with systemd, Please check!'
-        fi         
-    fi		
-}
-
-install_elasticsearch(){
-    if [ ! -e /etc/elasticsearch ]; then
-        apt-get install -y gnupg2 >/dev/null 2>&1
-        curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - >/dev/null 2>&1
-        echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list >/dev/null 2>&1
-        apt update >/dev/null 2>&1
-        apt install elasticsearch -y >/dev/null 2>&1
-        echoG 'Start elasticsearch service'
-        service elasticsearch start >/dev/null 2>&1
-        if [ ${?} != 0 ]; then
-            echoR 'Issue with elasticsearch package, Please check!'
-            exit 1
-        fi
-        systemctl enable elasticsearch >/dev/null 2>&1
-    else
-        echoG 'Elasticsearch already exist, skip!'
-    fi     
-}
-
-install_git(){
-	if [ ! -e /usr/bin/git ]; then
-		echoG 'Install git'
-		apt-get update >/dev/null 2>&1
-		apt-get install git -y >/dev/null 2>&1
-    fi
-}
 
 case ${1} in 
     -[pP] | -package | --package) shift
@@ -113,18 +62,6 @@ case ${1} in
             unzip)
                 install_unzip
             ;;
-            composer)
-                install_composer
-            ;;
-            systemd)
-                install_systemd
-            ;;    
-            elasticsearch)
-                install_elasticsearch
-            ;;    
-            git)
-                install_git
-            ;;    
         esac    
     ;;
     -[hH] | -help | --help)
