@@ -196,7 +196,7 @@ docker-compose up --build
 
 ## Support & Feedback
 If you still have a question after using LiteSpeed Docker, you have a few options.
-* Join [the GoLiteSpeed Slack community](litespeedtech.com/slack) for real-time discussion
+* Join [the GoLiteSpeed Slack community](https://litespeedtech.com/slack/) for real-time discussion
 * Post to [the LiteSpeed Forums](https://www.litespeedtech.com/support/forum/) for community support
 * Reporting any issue on [Github lsws-docker-env](https://github.com/litespeedtech/lsws-docker-env/issues) project
 
