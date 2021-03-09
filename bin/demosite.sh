@@ -85,7 +85,7 @@ install_packages(){
 
 app_download(){
     install_packages ${1}
-    docker-compose exec ${CONT_NAME} bash -c "appinstallctl.sh --app ${1} --domain ${2}"
+    docker-compose exec -T ${CONT_NAME} bash -c "appinstallctl.sh --app ${1} --domain ${2}"
 }
 
 lsws_restart(){
