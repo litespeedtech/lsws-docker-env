@@ -4,7 +4,7 @@
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 18.04 Linux.
+Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 20.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
@@ -32,7 +32,7 @@ The docker image installs the following packages on your system:
 
 |Component|Version|
 | :-------------: | :-------------: |
-|Linux|Ubuntu 18.04|
+|Linux|Ubuntu 20.04|
 |LiteSpeed|[Latest version](https://www.litespeedtech.com/products/litespeed-web-server/download)|
 |MariaDB|[Stable version: 10.5](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|

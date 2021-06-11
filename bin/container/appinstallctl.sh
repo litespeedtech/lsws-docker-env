@@ -165,6 +165,15 @@ RewriteRule . /index.php [L]
 EOM
 }
 
+
+get_theme_name(){
+    THEME_NAME=$(grep WP_DEFAULT_THEME ${VH_DOC_ROOT}/wp-includes/default-constants.php | grep -v '!' | awk -F "'" '{print $4}')
+    echo "${THEME_NAME}" | grep 'twenty' >/dev/null 2>&1
+    if [ ${?} = 0 ]; then
+        THEME="${THEME_NAME}"
+    fi
+}
+
 set_lscache(){ 
     cat << EOM > "${WP_CONST_CONF}" 
 ;
@@ -639,6 +648,7 @@ main(){
 		preinstall_wordpress
 		install_wp_plugin
 		config_wp_htaccess
+		get_theme_name
 		set_lscache
 		change_owner
 		exit 0
