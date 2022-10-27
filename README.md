@@ -4,7 +4,7 @@
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 20.04 Linux.
+Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 22.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
@@ -21,7 +21,7 @@ git clone https://github.com/litespeedtech/lsws-docker-env.git
 ```
 Open a terminal, `cd` to the folder in which `docker-compose.yml` is saved, and run:
 ```
-docker-compose up
+docker compose up
 ```
 
 Note: If you wish to run a single web server container, please see the [usage method here](https://github.com/litespeedtech/lsws-dockerfiles#usage).
@@ -32,7 +32,7 @@ The docker image installs the following packages on your system:
 
 |Component|Version|
 | :-------------: | :-------------: |
-|Linux|Ubuntu 20.04|
+|Linux|Ubuntu 22.04|
 |LiteSpeed|[Latest version](https://www.litespeedtech.com/products/litespeed-web-server/download)|
 |MariaDB|[Stable version: 10.5](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
@@ -80,11 +80,11 @@ Cloned project
 ### Starting a Container
 Start the container with the `up` or `start` methods:
 ```
-docker-compose up
+docker compose up
 ```
 You can run with daemon mode, like so:
 ```
-docker-compose up -d
+docker compose up -d
 ```
 The container is now built and running. 
 
@@ -92,12 +92,12 @@ Note: The container will auto-apply a 15-day trial license. Please contact LiteS
 
 ### Stopping a Container
 ```
-docker-compose stop
+docker compose stop
 ```
 ### Removing Containers
 To stop and remove all containers, use the `down` command:
 ```
-docker-compose down
+docker compose down
 ```
 ### Setting the WebAdmin Password
 We strongly recommend you set your personal password right away.
@@ -179,7 +179,7 @@ If you want to customize the image by adding some packages, e.g. `lsphp74-pspell
 FROM litespeedtech/litespeed:latest
 RUN apt-get update && apt-get install lsphp74-pspell
 ```
-3. Add `build: ./custom` line under the "image: litespeedtech" of docker-composefile. So it will looks like this 
+3. Add `build: ./custom` line under the "image: litespeedtech" of docker-compose file. So it will looks like this 
 ```
   litespeed:
     image: litespeedtech/litespeed:${LSWS_VERSION}-${PHP_VERSION}
@@ -187,7 +187,7 @@ RUN apt-get update && apt-get install lsphp74-pspell
 ```
 4. Build and start it with command:
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Support & Feedback
