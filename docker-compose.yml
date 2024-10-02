@@ -1,18 +1,19 @@
-version: '3'
 services:
   mysql:
-    image: mariadb:10.5.9
-    command: --max_allowed_packet=256M --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    image: mariadb:11.4
+    logging:
+      driver: none
+    command: ["--max-allowed-packet=512M"]
     volumes:
       - "./data/db:/var/lib/mysql:delegated"
-    ports:
-       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    restart: always  
+    restart: always
+    networks:
+      - default
   litespeed:
     image: litespeedtech/litespeed:${LSWS_VERSION}-${PHP_VERSION}
     env_file:
@@ -32,11 +33,31 @@ services:
     restart: always
     environment:
       TZ: ${TimeZone}
+    networks:
+      - default      
   phpmyadmin:
-    image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+    image: bitnami/phpmyadmin:5.2.0-debian-11-r43
     ports:
-      - 8080:80
-      - 8443:443
+      - 8080:8080
+      - 8443:8443
     environment:
         DATABASE_HOST: mysql
-    restart: always    
+    restart: always
+    networks:
+      - default
+  redis:
+    image: "redis:alpine"
+    logging:
+      driver: none
+    # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
+    volumes:
+      - ./redis/data:/var/lib/redis
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    restart: always
+    networks:
+      - default
+networks:
+  default:
+    driver: bridge 

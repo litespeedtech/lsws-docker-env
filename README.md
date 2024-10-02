@@ -32,14 +32,15 @@ The docker image installs the following packages on your system:
 
 |Component|Version|
 | :-------------: | :-------------: |
-|Linux|Ubuntu 22.04|
+|Linux|Ubuntu 24.04|
 |LiteSpeed|[Latest version](https://www.litespeedtech.com/products/litespeed-web-server/download)|
-|MariaDB|[Stable version: 10.5](https://hub.docker.com/_/mariadb)|
+|MariaDB|[Stable version: 11.4](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
 |WordPress|[Latest from WordPress](https://wordpress.org/download/)|
 |phpMyAdmin|[Latest from dockerhub](https://hub.docker.com/r/bitnami/phpmyadmin/)|
+|Redis|[Latest from dockerhub](https://hub.docker.com/_/redis/)|
 
 ## Data Structure
 Cloned project 
@@ -132,6 +133,10 @@ To preconfigure the `wp-config` file, run the `database.sh` script for your doma
 ```
 ./bin/appinstall.sh [-A, --app] wordpress [-D, --domain] example.com
 ```
+
+### Connecting to Redis 
+Go to [WordPress > LSCache Plugin > Cache > Object](https://docs.litespeedtech.com/lscache/lscwp/cache/#object-tab), select **Redis** method and input `redis` to the Host field. 
+
 ### Installing ACME 
 We need to run the ACME installation command the **first time only**. 
 With email notification:
@@ -172,12 +177,12 @@ bash bin/webadmin.sh [-S, --serial] TRIAL
 After installation, you can use phpMinAdmin to access the database by visiting http://127.0.0.1:8080 or https://127.0.0.1:8443. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
 ## Customization
-If you want to customize the image by adding some packages, e.g. `lsphp74-pspell`, just extend it with a Dockerfile. 
+If you want to customize the image by adding some packages, e.g. `lsphp83-pspell`, just extend it with a Dockerfile. 
 1. We can create a `custom` folder and a `custom/Dockerfile` file under the main project. 
 2. Add the following example code to `Dockerfile` under the custom folder
 ```
 FROM litespeedtech/litespeed:latest
-RUN apt-get update && apt-get install lsphp74-pspell
+RUN apt-get update && apt-get install lsphp83-pspell
 ```
 3. Add `build: ./custom` line under the "image: litespeedtech" of docker-compose file. So it will looks like this 
 ```
