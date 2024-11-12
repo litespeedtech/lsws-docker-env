@@ -4,7 +4,7 @@
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 22.04 Linux.
+Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 24.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
@@ -148,6 +148,19 @@ Use the root domain in this command, and it will check for a certificate and aut
 ```
 ./bin/acme.sh [-D, --domain] example.com
 ```
+
+Other parameters:
+
+  * [`-r`, `--renew`]: Renew a specific domain with -D or --domain parameter if posibile. To force renew, use -f parameter.
+
+  * [`-R`, `--renew-all`]: Renew all domains if possible. To force renew, use -f parameter.  
+
+  * [`-f`, `-F`, `--force`]: Force renew for a specific domain or all domains. 
+
+  * [`-v`, `--revoke`]: Revoke a domain.  
+
+  * [`-V`, `--remove`]: Remove a domain.
+
 ### Updating Web Server
 To upgrade the web server to latest stable version, run the following:
 ```
