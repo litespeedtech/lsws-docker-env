@@ -36,10 +36,9 @@ services:
     networks:
       - default      
   phpmyadmin:
-    image: bitnami/phpmyadmin:5.2.2
+    image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}
     ports:
       - 8080:8080
-      - 8443:8443
     environment:
         DATABASE_HOST: mysql
     restart: always
@@ -51,7 +50,7 @@ services:
       driver: none
     # command: redis-server --requirepass 8b405f60665e48f795752e534d93b722
     volumes:
-      - ./redis/data:/var/lib/redis
+      - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     environment:
       - REDIS_REPLICATION_MODE=master
