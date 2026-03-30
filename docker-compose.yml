@@ -40,7 +40,7 @@ services:
     ports:
       - 8080:80
     environment:
-        DATABASE_HOST: mysql
+        PMA_HOST: mysql
     restart: always
     networks:
       - default
