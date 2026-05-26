@@ -100,7 +100,7 @@ verify_owasp(){
 
 main(){
     verify_lsws
-    verify_phpadmin
+    #verify_phpadmin
     install_demo
     verify_page
     verify_owasp

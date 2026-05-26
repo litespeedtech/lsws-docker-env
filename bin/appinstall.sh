@@ -13,6 +13,7 @@ help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
     echow '-A, --app [app_name] -D, --domain [DOMAIN_NAME]'
     echo "${EPACE}${EPACE}Example: appinstall.sh -A wordpress -D example.com"
+    echo "${EPACE}${EPACE}Will install WordPress CMS under the example.com domain"
     echow '-H, --help'
     echo "${EPACE}${EPACE}Display help and exit."
     exit 0
@@ -25,22 +26,33 @@ check_input(){
     fi
 }
 
-install_packages(){
-    if [ "${1}" = 'wordpress' ]; then
-        docker compose exec litespeed /bin/bash -c "pkginstallctl.sh --package ed"
-        docker compose exec litespeed /bin/bash -c "pkginstallctl.sh --package unzip"  
-    fi    
+validate_domain(){
+    if ! echo "${1}" | grep -Eq '^(localhost|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$'; then
+        echo "[X] Invalid domain name: '${1}'. Abort!"
+        exit 1
+    fi
+}
+
+validate_app_name(){
+    case "${1}" in
+        wordpress|wp) ;;
+        *)
+            echo "[X] Invalid app name: '${1}'. Abort!"
+            exit 1
+            ;;
+    esac
 }
 
 app_download(){
-    install_packages ${1}
-    docker compose exec litespeed bash -c "appinstallctl.sh --app ${1} --domain ${2}"
+    validate_app_name "${1}"
+    validate_domain "${2}"
+    docker compose exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
     bash bin/webadmin.sh -r
     exit 0
 }
 
 main(){
-    app_download "${APP_NAME}" "${DOMAIN}"
+    app_download ${APP_NAME} ${DOMAIN}
 }
 
 check_input ${1}

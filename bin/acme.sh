@@ -6,7 +6,8 @@ INSTALL=''
 UNINSTALL=''
 TYPE=0
 CONT_NAME='litespeed'
-ACME_SRC='https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh'
+ACME_VERSION='3.1.2'
+ACME_SRC="https://raw.githubusercontent.com/acmesh-official/acme.sh/${ACME_VERSION}/acme.sh"
 EPACE='        '
 RENEW=''
 RENEW_ALL=''
@@ -73,6 +74,14 @@ domain_filter(){
     DOMAIN="${DOMAIN#scp://}"
     DOMAIN="${DOMAIN#sftp://}"
     DOMAIN=${DOMAIN%%/*}
+    validate_domain "${DOMAIN}"
+}
+
+validate_domain(){
+    if ! echo "${1}" | grep -Eq '^(localhost|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$'; then
+        echo -e "[X] Invalid domain name: \e[31m${1}\e[39m. Abort!"
+        exit 1
+    fi
 }
 
 email_filter(){
@@ -176,16 +185,32 @@ lsws_restart(){
 doc_root_verify(){
     if [ "${DOC_ROOT}" = '' ]; then
         DOC_PATH="/var/www/vhosts/${1}/html"
+        ALT_DOC_PATH="/var/www/vhosts/www.${1}/html"
     else
-        DOC_PATH="${DOC_ROOT}"    
+        DOC_PATH="${DOC_ROOT}"
     fi
+
     docker compose exec ${CONT_NAME} su -c "[ -e ${DOC_PATH} ]"
     if [ ${?} -eq 0 ]; then
         echo -e "[O] The document root folder \033[32m${DOC_PATH}\033[0m does exist."
-    else
-        echo -e "[X] The document root folder \e[31m${DOC_PATH}\e[39m does not exist!"
-        exit 1
+        return 0
     fi
+
+    if [ "${DOC_ROOT}" = '' ]; then
+        docker compose exec ${CONT_NAME} su -c "[ -e ${ALT_DOC_PATH} ]"
+        if [ ${?} -eq 0 ]; then
+            DOC_PATH="${ALT_DOC_PATH}"
+            echo -e "[!] The default document root was not found. Using fallback \033[33m${DOC_PATH}\033[0m."
+            echo -e "[O] The document root folder \033[32m${DOC_PATH}\033[0m does exist."
+            return 0
+        fi
+    fi
+
+    echo -e "[X] The document root folder \e[31m${DOC_PATH}\e[39m does not exist!"
+    if [ "${DOC_ROOT}" = '' ]; then
+        echo -e "[X] The fallback document root \e[31m${ALT_DOC_PATH}\e[39m does not exist!"
+    fi
+    exit 1
 }
 
 install_cert(){
@@ -242,13 +267,16 @@ main(){
         renew_all_acme
         exit 0
     elif [ "${RENEW}" = 'true' ]; then
-        renew_acme ${DOMAIN}
+        validate_domain "${DOMAIN}"
+        renew_acme "${DOMAIN}"
         exit 0
     elif [ "${REVOKE}" = 'true' ]; then
-        revoke ${DOMAIN}
+        validate_domain "${DOMAIN}"
+        revoke "${DOMAIN}"
         exit 0
     elif [ "${REMOVE}" = 'true' ]; then
-        remove ${DOMAIN}
+        validate_domain "${DOMAIN}"
+        remove "${DOMAIN}"
         exit 0
     fi
 

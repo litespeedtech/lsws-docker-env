@@ -25,17 +25,26 @@ check_input(){
     fi
 }
 
+validate_domain(){
+    if ! echo "${1}" | grep -Eq '^(localhost|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$'; then
+        echo "[X] Invalid domain name: '${1}'. Abort!"
+        exit 1
+    fi
+}
+
 add_domain(){
-    check_input ${1}
+    check_input "${1}"
+    validate_domain "${1}"
     docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --add ${1}"
-    if [ ! -d "./sites/${1}" ]; then 
+    if [ ! -d "./sites/${1}" ]; then
         mkdir -p ./sites/${1}/{html,logs,certs}
     fi
     bash bin/webadmin.sh -r
 }
 
 del_domain(){
-    check_input ${1}
+    check_input "${1}"
+    validate_domain "${1}"
     docker compose exec ${CONT_NAME} su -s /bin/bash lsadm -c "cd /usr/local/lsws/conf && domainctl.sh --del ${1}"
     bash bin/webadmin.sh -r
 }

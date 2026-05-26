@@ -39,10 +39,38 @@ check_input(){
     fi
 }
 
+validate_identifier(){
+    if ! echo "${1}" | grep -Eq '^[A-Za-z0-9_]{1,63}$'; then
+        echo "[X] Invalid identifier '${1}'. Allowed: [A-Za-z0-9_], max 63 chars."
+        exit 1
+    fi
+}
+
+validate_password(){
+    if echo "${1}" | LC_ALL=C grep -q "['\"\\\\\$\`]"; then
+        echo "[X] Password contains forbidden characters: ' \" \\ \$ \`"
+        exit 1
+    fi
+    if [ "${#1}" -lt 8 ]; then
+        echo "[X] Password too short (minimum 8 characters)."
+        exit 1
+    fi
+}
+
+validate_domain(){
+    if ! echo "${1}" | grep -Eq '^(localhost|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$'; then
+        echo "[X] Invalid domain name: '${1}'. Abort!"
+        exit 1
+    fi
+}
+
 specify_name(){
     check_input ${SQL_USER}
     check_input ${SQL_PASS}
     check_input ${SQL_DB}
+    validate_identifier "${SQL_USER}"
+    validate_identifier "${SQL_DB}"
+    validate_password "$(echo "${SQL_PASS}" | tr -d "'")"
 }
 
 auto_name(){
@@ -87,7 +115,7 @@ check_db_access(){
     if [ ${?} != 0 ]; then
         echo '[X] DB access failed, please check!'
         exit 1
-    fi    
+    fi
 }
 
 check_db_exist(){
@@ -106,7 +134,7 @@ check_db_not_exist(){
     fi
 }
 
-db_setup(){  
+db_setup(){
     docker compose exec -T mysql su -c 'mariadb -uroot --password=${MYSQL_ROOT_PASSWORD} \
     -e "CREATE DATABASE '${SQL_DB}';" \
     -e "GRANT ALL PRIVILEGES ON '${SQL_DB}'.* TO '${SQL_USER}'@'${ANY}' IDENTIFIED BY '${SQL_PASS}';" \
@@ -119,9 +147,11 @@ db_delete(){
         echo "Database parameter is required!"
         exit 0
     fi
+    validate_identifier "${SQL_DB}"
     if [ "${SQL_USER}" == '' ]; then
         SQL_USER="${SQL_DB}"
     fi
+    validate_identifier "${SQL_USER}"
     check_db_not_exist ${SQL_DB}
     docker compose exec -T mysql su -c 'mariadb -uroot --password=${MYSQL_ROOT_PASSWORD} \
         -e "DROP DATABASE IF EXISTS '${SQL_DB}';" \
@@ -132,9 +162,12 @@ db_delete(){
 
 auto_setup_main(){
     check_input ${DOMAIN}
+    validate_domain "${DOMAIN}"
     gen_pass
     trans_name ${DOMAIN}
     auto_name
+    validate_identifier "${SQL_DB}"
+    validate_identifier "${SQL_USER}"
     check_db_exist ${SQL_DB}
     check_db_access
     db_setup

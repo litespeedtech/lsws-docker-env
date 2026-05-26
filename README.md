@@ -4,7 +4,7 @@
 [<img src="https://img.shields.io/badge/slack-LiteSpeed-blue.svg?logo=slack">](litespeedtech.com/slack) 
 [<img src="https://img.shields.io/twitter/follow/litespeedtech.svg?label=Follow&style=social">](https://twitter.com/litespeedtech)
 
-Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 24.04 Linux.
+Install a Lightweight WordPress container with LiteSpeed stable version based on Ubuntu 26.04 Linux.
 
 ### Prerequisites
 1. [Install Docker](https://www.docker.com/)
@@ -32,9 +32,9 @@ The docker image installs the following packages on your system:
 
 |Component|Version|
 | :-------------: | :-------------: |
-|Linux|Ubuntu 24.04|
+|Linux|Ubuntu 26.04|
 |LiteSpeed|[Latest version](https://www.litespeedtech.com/products/litespeed-web-server/download)|
-|MariaDB|[Stable version: 11.4](https://hub.docker.com/_/mariadb)|
+|MariaDB|[Stable version: 11.8](https://hub.docker.com/_/mariadb)|
 |PHP|[Latest version](http://rpms.litespeedtech.com/debian/)|
 |LiteSpeed Cache|[Latest from WordPress.org](https://wordpress.org/plugins/litespeed-cache/)|
 |ACME|[Latest from ACME official](https://github.com/acmesh-official/get.acme.sh)|
@@ -161,6 +161,60 @@ Other parameters:
 
   * [`-V`, `--remove`]: Remove a domain.
 
+### Using mkcert for Local Development SSL
+
+For local development domains (`.test`, `.local`, `.dev`, etc.), you can use `mkcert` to generate trusted SSL certificates without warnings.
+
+#### Installing mkcert
+
+First-time installation (Windows with Chocolatey):
+
+```bash
+bash bin/mkcert.sh --install
+```
+
+This will:
+
+* Install `mkcert` via Chocolatey
+* Create and install a local Certificate Authority (CA) in your system trust store
+
+#### Generating Local SSL Certificate
+
+After adding a domain to your environment, generate an SSL certificate:
+
+```bash
+bash bin/mkcert.sh [-D, --domain] example.test
+```
+
+This will:
+
+1. Check if the domain exists in your configuration
+2. Generate certificates for `example.test` and `www.example.test`
+3. Create a `dockerLocal` template with SSL configuration
+4. Copy certificates to the container
+5. Move the domain from the standard template to the SSL-enabled template
+6. Restart OpenLiteSpeed
+
+Your domain will now be accessible via HTTPS with a trusted certificate at `https://example.test`
+
+#### Removing Local SSL Certificate
+
+To remove the SSL certificate and revert to HTTP:
+
+```bash
+bash bin/mkcert.sh [-R, --remove] [-D, --domain] example.test
+```
+
+This will:
+
+1. Remove the domain from the `dockerLocal` template
+2. Move it back to the standard `docker` template
+3. Delete certificate files from both host and container
+4. Clean up empty templates if no other domains use SSL
+5. Restart OpenLiteSpeed
+
+> **Important**: You must add the domain to your environment first using `bash bin/domain.sh --add example.test` before generating certificates.
+
 ### Updating Web Server
 To upgrade the web server to latest stable version, run the following:
 ```
@@ -190,12 +244,12 @@ bash bin/webadmin.sh [-S, --serial] TRIAL
 After installation, you can use phpMinAdmin to access the database by visiting http://127.0.0.1:8080 or https://127.0.0.1:8443. The default username is `root`, and the password is the same as the one you supplied in the `.env` file.
 
 ## Customization
-If you want to customize the image by adding some packages, e.g. `lsphp83-pspell`, just extend it with a Dockerfile. 
+If you want to customize the image by adding some packages, e.g. `lsphp85-pspell`, just extend it with a Dockerfile. 
 1. We can create a `custom` folder and a `custom/Dockerfile` file under the main project. 
 2. Add the following example code to `Dockerfile` under the custom folder
 ```
 FROM litespeedtech/litespeed:latest
-RUN apt-get update && apt-get install lsphp83-pspell
+RUN apt-get update && apt-get install lsphp85-pspell
 ```
 3. Add `build: ./custom` line under the "image: litespeedtech" of docker-compose file. So it will looks like this 
 ```

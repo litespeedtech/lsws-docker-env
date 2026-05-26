@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 source .env
-APP='wordpress'
+APP_NAME='wordpress'
 CONT_NAME='litespeed'
 DOC_FD=''
-EPACE='        '
 
 echow(){
     FLAG=${1}
@@ -13,13 +12,8 @@ echow(){
 
 help_message(){
     case ${1} in
-        "1")   
+        "1")    
             echow "Script will get 'DOMAIN' and 'database' info from .env file, then auto setup virtual host and the wordpress site for you."
-            echo -e "\033[1mOPTIONS\033[0m"
-            echow '-W, --wordpress'
-            echo "${EPACE}${EPACE}Example: lsws1clk.sh -W. If no input, script will still install wordpress by default"
-            echow '-H, --help'
-            echo "${EPACE}${EPACE}Display help and exit." 
             exit 0
         ;;
         "2")
@@ -76,16 +70,8 @@ EOT
     fi
 }
 
-install_packages(){
-    if [ "${1}" = 'wordpress' ]; then
-        docker compose exec litespeed /bin/bash -c "pkginstallctl.sh --package ed"
-        docker compose exec litespeed /bin/bash -c "pkginstallctl.sh --package unzip"  
-    fi    
-}
-
 app_download(){
-    install_packages ${1}
-    docker compose exec -T ${CONT_NAME} bash -c "appinstallctl.sh --app ${1} --domain ${2}"
+    docker compose exec -T ${CONT_NAME} su -c "appinstallctl.sh --app ${1} --domain ${2}"
 }
 
 lsws_restart(){
@@ -97,8 +83,9 @@ main(){
     gen_root_fd ${DOMAIN}
     create_db ${DOMAIN}
     store_credential
-    app_download ${APP} ${DOMAIN}
+    app_download ${APP_NAME} ${DOMAIN}
     lsws_restart
+    help_message 2
 }
 
 while [ ! -z "${1}" ]; do
@@ -106,9 +93,6 @@ while [ ! -z "${1}" ]; do
         -[hH] | -help | --help)
             help_message 1
             ;;
-        -[wW] | --wordpress)
-            APP='wordpress'
-            ;;         
         *) 
             help_message 1
             ;;              

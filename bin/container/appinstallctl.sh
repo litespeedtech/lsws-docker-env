@@ -1,34 +1,18 @@
 #!/bin/bash
-
 DEFAULT_VH_ROOT='/var/www/vhosts'
 VH_DOC_ROOT=''
-APP=''
+VHNAME=''
+APP_NAME=''
 DOMAIN=''
 WWW_UID=''
 WWW_GID=''
-USER='1000'
 WPCONSTCONF=''
+PUB_IP=$(curl -s https://checkip.amazonaws.com)
 DB_HOST='mysql'
 PLUGINLIST="litespeed-cache.zip"
 THEME='twentytwenty'
-LSDIR='/usr/local/lsws'
-EMAIL='test@example.com'
-APP_ACCT=''
-APP_PASS=''
-SKIP_WP=0
-app_skip=0
 EPACE='        '
 
-echoY() {
-    echo -e "\033[38;5;148m${1}\033[39m"
-}
-echoG() {
-    echo -e "\033[38;5;71m${1}\033[39m"
-}
-echoR()
-{
-    echo -e "\033[38;5;203m${1}\033[39m"
-}
 echow(){
     FLAG=${1}
     shift
@@ -36,24 +20,41 @@ echow(){
 }
 
 help_message(){
-    case ${1} in
-        "1")   	
-			echo -e "\033[1mOPTIONS\033[0m"
-			echow '-A, -app [wordpress|magento] -D, --domain [DOMAIN_NAME]'
-			echo "${EPACE}${EPACE}Example: appinstallctl.sh --app wordpress --domain example.com"
-			echow '-H, --help'
-			echo "${EPACE}${EPACE}Display help and exit."
-			exit 0
-        ;;
-        "2")
-            echow 'Service finished, enjoy your accelarated LiteSpeed server!'
-        ;;
-    esac  
+	echo -e "\033[1mOPTIONS\033[0m"
+    echow '-A, -app [wordpress] -D, --domain [DOMAIN_NAME]'
+    echo "${EPACE}${EPACE}Example: appinstallctl.sh --app wordpress --domain example.com"
+    echow '-H, --help'
+    echo "${EPACE}${EPACE}Display help and exit."
+    exit 0
 }
 
 check_input(){
     if [ -z "${1}" ]; then
-        help_message 1
+        help_message
+        exit 1
+    fi
+}
+
+validate_domain(){
+    if ! echo "${1}" | grep -Eq '^(localhost|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$'; then
+        echo "[X] Invalid domain name: '${1}'. Abort!"
+        exit 1
+    fi
+}
+
+validate_app_name(){
+    case "${1}" in
+        wordpress|wp) ;;
+        *)
+            echo "[X] Invalid app name: '${1}'. Abort!"
+            exit 1
+            ;;
+    esac
+}
+
+validate_vhname(){
+    if ! echo "${1}" | grep -Eq '^[A-Za-z0-9._-]+$'; then
+        echo "[X] Invalid vhname: '${1}'. Abort!"
         exit 1
     fi
 }
@@ -68,23 +69,16 @@ linechange(){
 
 ck_ed(){
     if [ ! -f /bin/ed ]; then
-        echo 'ed package not exist, please check!'
-		exit 1
+        echo "Install ed package.."
+        apt-get install ed -y > /dev/null 2>&1
     fi    
 }
 
 ck_unzip(){
     if [ ! -f /usr/bin/unzip ]; then 
-        echo 'unzip package not exist, please check!'
-		exit 1
+        echo "Install unzip package.."
+        apt update && apt-get install unzip -y > /dev/null 2>&1
     fi		
-}
-
-gen_pass(){
-	APP_STR=$(shuf -i 100-999 -n1)
-    APP_PASS=$(openssl rand -hex 16)
-	APP_ACCT="admin${APP_STR}"
-	MA_BACK_URL="admin_${APP_STR}"
 }
 
 get_owner(){
@@ -108,7 +102,11 @@ get_db_pass(){
 }
 
 set_vh_docroot(){
-    if [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
+	if [ "${VHNAME}" != '' ]; then
+	    VH_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}"
+	    VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${VHNAME}/html"
+		WPCONSTCONF="${VH_DOC_ROOT}/wp-content/plugins/litespeed-cache/data/const.default.json"
+	elif [ -d ${DEFAULT_VH_ROOT}/${1}/html ]; then
 	    VH_ROOT="${DEFAULT_VH_ROOT}/${1}"
         VH_DOC_ROOT="${DEFAULT_VH_ROOT}/${1}/html"
 		WPCONSTCONF="${VH_DOC_ROOT}/wp-content/plugins/litespeed-cache/data/const.default.json"
@@ -121,7 +119,7 @@ set_vh_docroot(){
 check_sql_native(){
 	local COUNTER=0
 	local LIMIT_NUM=100
-	until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected')" ]; do
+	until [ "$(curl -v mysql:3306 2>&1 | grep -i 'native\|Connected\|Established')" ]; do
 		echo "Counter: ${COUNTER}/${LIMIT_NUM}"
 		COUNTER=$((COUNTER+1))
 		if [ ${COUNTER} = 10 ]; then
@@ -147,7 +145,7 @@ install_wp_plugin(){
     rm -f ${VH_DOC_ROOT}/wp-content/plugins/*.zip
 }
 
-config_wp_htaccess(){
+set_htaccess(){
     if [ ! -f ${VH_DOC_ROOT}/.htaccess ]; then 
         touch ${VH_DOC_ROOT}/.htaccess
     fi   
@@ -165,7 +163,6 @@ RewriteRule . /index.php [L]
 EOM
 }
 
-
 get_theme_name(){
     THEME_NAME=$(grep WP_DEFAULT_THEME ${VH_DOC_ROOT}/wp-includes/default-constants.php | grep -v '!' | awk -F "'" '{print $4}')
     echo "${THEME_NAME}" | grep 'twenty' >/dev/null 2>&1
@@ -182,7 +179,6 @@ set_lscache(){
 		sed -ie 's/"object-host": .*"/"object-host": '\"redis\"'/g' ${WPCONSTCONF}
 		sed -ie 's/"object-port": .*"/"object-port": '\"6379\"'/g' ${WPCONSTCONF}
     fi
-
     THEME_PATH="${VH_DOC_ROOT}/wp-content/themes/${THEME}"
     if [ ! -f ${THEME_PATH}/functions.php ]; then
         cat >> "${THEME_PATH}/functions.php" <<END
@@ -213,7 +209,11 @@ END
 }
 
 preinstall_wordpress(){
-	get_db_pass ${DOMAIN}
+	if [ "${VHNAME}" != '' ]; then
+	    get_db_pass ${VHNAME}
+	else
+		get_db_pass ${DOMAIN}
+	fi	
 	if [ ! -f ${VH_DOC_ROOT}/wp-config.php ] && [ -f ${VH_DOC_ROOT}/wp-config-sample.php ]; then
 		cp ${VH_DOC_ROOT}/wp-config-sample.php ${VH_DOC_ROOT}/wp-config.php
 		NEWDBPWD="define('DB_PASSWORD', '${SQL_PASS}');"
@@ -222,6 +222,7 @@ preinstall_wordpress(){
 		linechange 'DB_USER' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 		NEWDBPWD="define('DB_NAME', '${SQL_DB}');"
 		linechange 'DB_NAME' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
+        #NEWDBPWD="define('DB_HOST', '${PUB_IP}');"
 		NEWDBPWD="define('DB_HOST', '${DB_HOST}');"
 		linechange 'DB_HOST' ${VH_DOC_ROOT}/wp-config.php "${NEWDBPWD}"
 	elif [ -f ${VH_DOC_ROOT}/wp-config.php ]; then
@@ -234,74 +235,66 @@ preinstall_wordpress(){
 }
 
 app_wordpress_dl(){
-	if [ ! -f "${VH_DOC_ROOT}/wp-config.php" ] && [ ! -f "${VH_DOC_ROOT}/index.php" ]; then
+	if [ ! -f "${VH_DOC_ROOT}/wp-config.php" ] && [ ! -f "${VH_DOC_ROOT}/wp-config-sample.php" ]; then
 		wp core download \
 			--allow-root \
 			--quiet
 	else
-	    echoR 'wordpress or other file already exist, please manually clean up the document root folder, abort!'
+	    echo 'wordpress already exist, abort!'
 		exit 1
 	fi
 }
 
 change_owner(){
-	    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
-}
-
-store_access(){
-    cat << EOM > ${VH_ROOT}/.app_access
-Account: ${APP_ACCT}
-Password: ${APP_PASS}
-Admin_URL: ${MA_BACK_URL}
-EOM
-}
-
-show_access(){
-	echoG '----------------------------------------'
-	echoY "Account: ${APP_ACCT}"
-	echoY "Password: ${APP_PASS}"
-	echoY "Admin_URL: ${MA_BACK_URL}"
-	echoG '----------------------------------------'
+		if [ "${VHNAME}" != '' ]; then
+		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${VHNAME} 
+		else
+		    chown -R ${WWW_UID}:${WWW_GID} ${DEFAULT_VH_ROOT}/${DOMAIN}
+		fi
 }
 
 main(){
 	set_vh_docroot ${DOMAIN}
 	get_owner
-	gen_pass
 	cd ${VH_DOC_ROOT}
-	if [ "${APP}" = 'wordpress' ] || [ "${APP}" = 'W' ]; then
+	if [ "${APP_NAME}" = 'wordpress' ] || [ "${APP_NAME}" = 'wp' ]; then
 		check_sql_native
 		app_wordpress_dl
 		preinstall_wordpress
 		install_wp_plugin
-		config_wp_htaccess
+		set_htaccess
 		get_theme_name
 		set_lscache
 		change_owner
 		exit 0
 	else
-		echo "APP: ${APP} not support, exit!"
+		echo "APP: ${APP_NAME} not support, exit!"
 		exit 1	
 	fi
-	help_message 2
 }
 
 check_input ${1}
 while [ ! -z "${1}" ]; do
 	case ${1} in
 		-[hH] | -help | --help)
-			help_message 1
+			help_message
 			;;
 		-[aA] | -app | --app) shift
 			check_input "${1}"
-			APP="${1}"
+			validate_app_name "${1}"
+			APP_NAME="${1}"
 			;;
 		-[dD] | -domain | --domain) shift
 			check_input "${1}"
+			validate_domain "${1}"
 			DOMAIN="${1}"
-			;;      
+			;;
+		-vhname | --vhname) shift
+			validate_vhname "${1}"
+			VHNAME="${1}"
+			;;
 		*) 
-			help_message 1
+			help_message
 			;;              
 	esac
 	shift

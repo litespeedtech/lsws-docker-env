@@ -58,6 +58,13 @@ check_input(){
     fi
 }
 
+validate_domain(){
+    if ! echo "${1}" | grep -Eq '^(localhost|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$'; then
+        echo "[X] Invalid domain name: '${1}'. Abort!"
+        exit 1
+    fi
+}
+
 check_www(){
     CHECK_WWW=$(echo ${1} | cut -c1-4)
     if [[ ${CHECK_WWW} == www. ]] ; then
@@ -147,11 +154,15 @@ while [ ! -z "${1}" ]; do
             help_message
             ;;
         -[aA] | -add | --add) shift
-            add_domain ${1}
+            check_input "${1}"
+            validate_domain "${1}"
+            add_domain "${1}"
             ;;
         -[dD] | -del | --del | --delete) shift
-            del_domain ${1}
-            ;;          
+            check_input "${1}"
+            validate_domain "${1}"
+            del_domain "${1}"
+            ;;
         *) 
             help_message
             ;;
